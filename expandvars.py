@@ -51,7 +51,7 @@ class Expander(object):
             return
         if ":" not in self._buffr:
             self._result.extend(environ.get("".join(self._buffr), ""))
-            self._buffr.clear()
+            del self._buffr[:]
             return
 
         x, y = "".join(self._buffr).split(":", 1)
@@ -61,7 +61,7 @@ class Expander(object):
             y = y[1:]
             if x in environ:
                 self._result.extend(y)
-            self._buffr.clear()
+            del self._buffr[:]
             return
 
         if y.startswith("-") or y.startswith("="):
@@ -70,7 +70,7 @@ class Expander(object):
             self._result.extend(environ.get(x, y))
             if _y == "=" and x not in environ:
                 environ.update({x: y})
-            self._buffr.clear()
+            del self._buffr[:]
             return
 
         if ":" not in y:
@@ -78,17 +78,17 @@ class Expander(object):
                 raise ValueError("bad substitution")
             if not _isint(y):
                 self._result.extend(environ.get(x, ""))
-                self._buffr.clear()
+                del self._buffr[:]
                 return
             self._result.extend(environ.get(x, "")[int(y) :])
-            self._buffr.clear()
+            del self._buffr[:]
             return
 
         y, z = y.split(":", 1)
         y, z = y.strip(), z.strip()
 
         if not z or z.isalpha():
-            self._buffr.clear()
+            del self._buffr[:]
             return
 
         if not z.isalnum() and not _isint(z):
@@ -104,11 +104,11 @@ class Expander(object):
 
         if not y or not y.isdigit():
             self._result.extend(environ.get(x, "")[:z])
-            self._buffr.clear()
+            del self._buffr[:]
             return
         y = int(y)
         self._result.extend(environ.get(x, "")[y : y + z])
-        self._buffr.clear()
+        del self._buffr[:]
 
     def expand_var(self, variter):
         if self._buffr:
