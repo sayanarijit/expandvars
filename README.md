@@ -28,8 +28,8 @@ Usage
 ```python
 from expandvars import expandvars
 
-print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/custom/path}"))
-# /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/custom/path
+print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
+# /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/default/path
 ```
 
 

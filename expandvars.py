@@ -7,7 +7,7 @@ __author__ = "Arijit Basu (https://arijitbasu.in)"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.1.3"
+__version__ = "v0.1.4"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
@@ -32,7 +32,10 @@ class Expander(object):
 
     Example usage: ::
 
-        val = Expander('${FOO:-default}:${BAR:2:10}').result
+        from expandvars import expandvars
+
+        print(Expander("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}").result)
+        # /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/default/path
     """
 
     def __init__(self, vars_):
@@ -203,9 +206,6 @@ class Expander(object):
 def expandvars(vars_):
     """Expand system variables Unix style.
 
-    NOTE: Unlike `Expander` class, the argument to this
-    function must start with "$".
-
     Params:
         vars_ (str): System variables to expand.
 
@@ -214,6 +214,9 @@ def expandvars(vars_):
 
     Example usage: ::
 
-        val = expandvars('${FOO:-default}:${BAR:2:10}')
+        from expandvars import expandvars
+
+        print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
+        # /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/default/path
     """
     return Expander(vars_).result
