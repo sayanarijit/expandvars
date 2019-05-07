@@ -9,9 +9,9 @@ Expand system variables Unix style
 
 Inspiration
 -----------
-This module is inspired by [GNU bash](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)'s variable modifier features. It can be used as an alternative to Python's [os.path.expandvars](https://docs.python.org/3/library/os.path.html#os.path.expandvars) function.
+This module is inspired by [GNU bash's variable expansion features](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html). It can be used as an alternative to Python's [os.path.expandvars](https://docs.python.org/3/library/os.path.html#os.path.expandvars) function.
 
-> NOTE: Although it copies most of the common behaviours, it doesn't follow it strictly.
+> NOTE: Although it copies most of the common behaviours, it doesn't follow it strictly. For example, it doesn't work with arrays.
 
 
 Usage
