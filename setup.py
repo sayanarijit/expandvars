@@ -22,7 +22,7 @@ setup(
     author=__author__,
     author_email=__email__,
     license=__license__,
-    py_modules=["expandpath"],
+    py_modules=["expandvars"],
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
