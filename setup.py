@@ -2,8 +2,14 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+from expandvars import __author__
+from expandvars import __description__
+from expandvars import __email__
+from expandvars import __license__
+from expandvars import __homepage__
+from expandvars import __license__
+from expandvars import __version__
 
-VERSION = "v0.1"
 
 here = path.abspath(path.dirname(__file__))
 
@@ -13,14 +19,14 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="expandpath",
-    version=VERSION,
-    description="Expand system variables Unix style",
+    version=__version__,
+    description=__description__,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/sayanarijit/expandpath",
-    author="Arijit Basu",
-    author_email="sayanarijit@gmail.com",
-    license="MIT",
+    url=__homepage__,
+    author=__author__,
+    author_email=__email__,
+    license=__license__,
     py_modules=["expandpath"],
     classifiers=[
         # How mature is this project? Common values are
@@ -47,8 +53,8 @@ setup(
         "Operating System :: Microsoft",
     ],
     platforms=["Any"],
-    keywords="expand environment variables",
+    keywords="expand system variables",
     packages=find_packages(exclude=["contrib", "docs", "tests", "examples"]),
     install_requires=[],
-    extras_require={"testing": ["pytest==4.4.1"]},
+    extras_require={"testing": ["pytest>=4.4.1", 'pytest-cov>=2.7.1']},
 )

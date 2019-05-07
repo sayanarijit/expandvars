@@ -10,7 +10,7 @@ def test_expandvars_constant():
     assert expandvars("FOO") == "FOO"
     assert expandvars("$") == "$"
     assert expandvars("BAR$") == "BAR$"
-    assert expandvars("B$AR") == "B$AR"
+    assert expandvars("bar$FOO") == "barbar"
 
 
 def test_expandvars_empty():
@@ -75,6 +75,20 @@ def test_offset_length():
     assert expandvars("${FOO::5}") == "damnb"
 
 
+def test_excape():
+    os.environ.update({"FOO": "foo"})
+    assert expandvars("$FOO\\" + "$bar") == "foo$bar"
+    assert expandvars("$FOO\\" + "\\" + "\\" + "$bar") == "foo" + "\\" + "$bar"
+    assert expandvars("$FOO\\" + "$") == "foo$"
+
+
+def test_excape_not_followed_err():
+    os.environ.update({"FOO": "foo"})
+    with pytest.raises(ValueError) as e:
+        expandvars("$FOO\\")
+        assert e.value == "escape chracter is not escaping anything"
+
+
 def test_invalid_length_err():
     os.environ.update({"FOO": "damnbigfoobar"})
     with pytest.raises(ValueError) as e:
@@ -87,6 +101,16 @@ def test_bad_syntax_err():
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:}") == ""
         assert e.value == "bad substitution"
+
+
+def test_brace_never_closed_err():
+    os.environ.update({"FOO": "damnbigfoobar"})
+    with pytest.raises(ValueError) as e:
+        expandvars("${FOO:")
+        assert e.value == "${FOO:: '{' was never closed."
+    with pytest.raises(ValueError) as e:
+        expandvars("${FOO}${BAR")
+        assert e.value == "${BAR: '{' was never closed."
 
 
 def test_invalid_operand_err():

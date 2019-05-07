@@ -12,4 +12,6 @@ matrix:
 install:
   - pip install -e '.[testing]'
 script:
-  - pytest
+  - pytest --cov=expandpath --cov-report term
+after_success:
+  - codecov

@@ -1,3 +1,3 @@
-expandpath
+expandvars
 ==========
 To do

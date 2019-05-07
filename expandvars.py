@@ -1,7 +1,15 @@
-# Author: Arijit basu (https://arijitbasu.in)
-# Ref: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+# -*- coding: utf-8 -*-
 
 from os import environ
+
+
+__author__ = "Arijit Basu (https://arijitbasu.in)"
+__email__ = "sayanarijit@gmail.com"
+__homepage__ = "https://github.com/sayanarijit/expandvars"
+__description__ = "Expand system variables Unix style"
+__version__ = "v0.1.0"
+__license__ = "MIT"
+__all__ = ["Expander", "expandvars"]
 
 
 def _valid_char(char):
@@ -30,10 +38,14 @@ class Expander(object):
     def __init__(self, vars_):
         self._result = []
         self._buffr = []
+        self.escaping = False
         if len(vars_) == 0:
             return
         variter = iter(vars_)
         c = next(variter)
+        if c == "\\":
+            c = self.escape(variter)
+            return
         if c == "$":
             self.expand_var(variter)
             return
@@ -46,11 +58,23 @@ class Expander(object):
             self.process_buffr()
             return
 
+    def escape(self, variter):
+        if self._buffr:
+            self.process_buffr()
+        try:
+            c = next(variter)
+        except StopIteration:
+            raise ValueError("escape chracter is not escaping anything")
+        if c == "$":
+            self._result.append(c)
+            c = self._next_or_done(variter)
+        self.expand_val(variter, c)
+
     def process_buffr(self):
         if not self._buffr:
             return
         if ":" not in self._buffr:
-            self._result.extend(environ.get("".join(self._buffr), ""))
+            self._result.append(environ.get("".join(self._buffr), ""))
             del self._buffr[:]
             return
 
@@ -60,14 +84,14 @@ class Expander(object):
         if y.startswith("+"):
             y = y[1:]
             if x in environ:
-                self._result.extend(y)
+                self._result.append(y)
             del self._buffr[:]
             return
 
         if y.startswith("-") or y.startswith("="):
             _y = y[0]
             y = y[1:]
-            self._result.extend(environ.get(x, y))
+            self._result.append(environ.get(x, y))
             if _y == "=" and x not in environ:
                 environ.update({x: y})
             del self._buffr[:]
@@ -77,10 +101,10 @@ class Expander(object):
             if not y.isalnum():
                 raise ValueError("bad substitution")
             if not _isint(y):
-                self._result.extend(environ.get(x, ""))
+                self._result.append(environ.get(x, ""))
                 del self._buffr[:]
                 return
-            self._result.extend(environ.get(x, "")[int(y) :])
+            self._result.append(environ.get(x, "")[int(y) :])
             del self._buffr[:]
             return
 
@@ -103,11 +127,11 @@ class Expander(object):
             raise ValueError("{}: substring expression < 0".format(z))
 
         if not y or not y.isdigit():
-            self._result.extend(environ.get(x, "")[:z])
+            self._result.append(environ.get(x, "")[:z])
             del self._buffr[:]
             return
         y = int(y)
-        self._result.extend(environ.get(x, "")[y : y + z])
+        self._result.append(environ.get(x, "")[y : y + z])
         del self._buffr[:]
 
     def expand_var(self, variter):
@@ -117,6 +141,9 @@ class Expander(object):
         if not c:
             self._result.append("$")
             return
+        if c == "\\":
+            self.escape(variter)
+            return
 
         if c == "{":
             self.expand_modifier_var(variter)
@@ -125,6 +152,8 @@ class Expander(object):
         while _valid_char(c):
             self._buffr.append(c)
             c = self._next_or_done(variter)
+            if c == "\\":
+                c = self.escape(variter)
             if not c:
                 return
         self.process_buffr()
@@ -141,10 +170,15 @@ class Expander(object):
                 self._buffr.append(c)
                 c = next(variter)
         except StopIteration:
-            raise ValueError('{}: "{" was never closed.'.format("".join(self._buffr)))
+            raise ValueError(
+                "{}: {} was never closed.".format("".join(self._buffr), repr("{"))
+            )
 
         c = self._next_or_done(variter)
         if not c:
+            return
+        if c == "\\":
+            self.escape(variter)
             return
         if c == "$":
             self.expand_var(variter)
@@ -156,6 +190,9 @@ class Expander(object):
         while c and c != "$":
             self._result.append(c)
             c = self._next_or_done(variter)
+            if c == "\\":
+                self.escape(variter)
+                return
         if c:
             self.expand_var(variter)
 
@@ -180,6 +217,4 @@ def expandvars(vars_):
         
         val = expandvars('${FOO:-default}:${BAR:2:10}')
     """
-    if not vars_.startswith("$"):
-        return vars_
     return Expander(vars_).result
