@@ -12,6 +12,6 @@ matrix:
 install:
   - pip install -e '.[testing]'
 script:
-  - pytest --cov=expandpath --cov-report term
+  - pytest --cov=expandvars
 after_success:
-  - codecov
+  - bash <(curl -s https://codecov.io/bash)

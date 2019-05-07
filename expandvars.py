@@ -44,7 +44,7 @@ class Expander(object):
         variter = iter(vars_)
         c = next(variter)
         if c == "\\":
-            c = self.escape(variter)
+            self.escape(variter)
             return
         if c == "$":
             self.expand_var(variter)
@@ -142,7 +142,7 @@ class Expander(object):
             self._result.append("$")
             return
         if c == "\\":
-            self.escape(variter)
+            self.expand_val(variter, "$\\")
             return
 
         if c == "{":
@@ -153,17 +153,17 @@ class Expander(object):
             self._buffr.append(c)
             c = self._next_or_done(variter)
             if c == "\\":
-                c = self.escape(variter)
-            if not c:
+                self.escape(variter)
                 return
-        self.process_buffr()
+            if not c:
+                self.process_buffr()
+                return
         if c == "$":
             self.expand_var(variter)
+            return
         self.expand_val(variter, c)
 
     def expand_modifier_var(self, variter):
-        if self._buffr:
-            self.process_buffr()
         try:
             c = next(variter)
             while c != "}":
@@ -176,12 +176,11 @@ class Expander(object):
 
         c = self._next_or_done(variter)
         if not c:
-            return
-        if c == "\\":
-            self.escape(variter)
+            self.process_buffr()
             return
         if c == "$":
             self.expand_var(variter)
+            return
         self.expand_val(variter, c)
 
     def expand_val(self, variter, c):

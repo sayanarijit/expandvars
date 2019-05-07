@@ -14,16 +14,27 @@ def test_expandvars_constant():
 
 
 def test_expandvars_empty():
-    if "foo" in os.environ:
-        del os.environ["foo"]
-    assert expandvars("$foo") == ""
+    if "FOO" in os.environ:
+        del os.environ["FOO"]
+    assert expandvars("") == ""
+    assert expandvars("$FOO") == ""
 
 
 def test_expandvars_simple():
-    os.environ.update({"FOO": "bar", "BIZ": "buz"})
+    os.environ.update({"FOO": "bar"})
     assert expandvars("$FOO") == "bar"
     assert expandvars("${FOO}") == "bar"
+
+
+def test_expandvars_combo():
+    os.environ.update({"FOO": "bar", "BIZ": "buz"})
     assert expandvars("${FOO}:$BIZ") == "bar:buz"
+    assert expandvars("$FOO$BIZ") == "barbuz"
+    assert expandvars("${FOO}$BIZ") == "barbuz"
+    assert expandvars("$FOO${BIZ}") == "barbuz"
+    assert expandvars("$FOO-$BIZ") == "bar-buz"
+    assert expandvars("boo$BIZ") == "boobuz"
+    assert expandvars("boo${BIZ}") == "boobuz"
 
 
 def test_expandvars_get_default():
@@ -75,14 +86,16 @@ def test_offset_length():
     assert expandvars("${FOO::5}") == "damnb"
 
 
-def test_excape():
+def test_escape():
     os.environ.update({"FOO": "foo"})
     assert expandvars("$FOO\\" + "$bar") == "foo$bar"
     assert expandvars("$FOO\\" + "\\" + "\\" + "$bar") == "foo" + "\\" + "$bar"
     assert expandvars("$FOO\\" + "$") == "foo$"
+    assert expandvars("$\\" + "FOO") == "$\\" + "FOO"
+    assert expandvars("\\" + "$FOO") == "$FOO"
 
 
-def test_excape_not_followed_err():
+def test_escape_not_followed_err():
     os.environ.update({"FOO": "foo"})
     with pytest.raises(ValueError) as e:
         expandvars("$FOO\\")
