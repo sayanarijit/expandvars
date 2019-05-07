@@ -2,7 +2,7 @@
 
 from os import environ
 
-__author__ = "Arijit Basu (https://arijitbasu.in)"
+__author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"

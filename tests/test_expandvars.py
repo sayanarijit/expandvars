@@ -93,6 +93,12 @@ def test_escape():
     assert expandvars("\\" + "$FOO") == "$FOO"
 
 
+def test_corner_cases():
+    if "FOO" in os.environ:
+        del os.environ["FOO"]
+    assert expandvars("${FOO:-{}}{}{}{}{{}}") == "{}{}{}{}{{}}"
+
+
 def test_escape_not_followed_err():
     os.environ.update({"FOO": "foo"})
     with pytest.raises(ValueError) as e:
