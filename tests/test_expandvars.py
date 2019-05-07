@@ -97,31 +97,31 @@ def test_escape_not_followed_err():
     os.environ.update({"FOO": "foo"})
     with pytest.raises(ValueError) as e:
         expandvars("$FOO\\")
-        assert e.value == "escape chracter is not escaping anything"
+    assert str(e.value) == "escape chracter is not escaping anything"
 
 
 def test_invalid_length_err():
     os.environ.update({"FOO": "damnbigfoobar"})
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:1:-3}")
-        assert e.value == "-3: substring expression < 0"
+    assert str(e.value) == "-3: substring expression < 0"
 
 
 def test_bad_syntax_err():
     os.environ.update({"FOO": "damnbigfoobar"})
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:}") == ""
-        assert e.value == "bad substitution"
+    assert str(e.value) == "bad substitution"
 
 
 def test_brace_never_closed_err():
     os.environ.update({"FOO": "damnbigfoobar"})
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:")
-        assert e.value == "${FOO:: '{' was never closed."
+    assert str(e.value) == "${FOO:: '{' was never closed."
     with pytest.raises(ValueError) as e:
         expandvars("${FOO}${BAR")
-        assert e.value == "${BAR: '{' was never closed."
+    assert str(e.value) == "${BAR: '{' was never closed."
 
 
 def test_invalid_operand_err():
