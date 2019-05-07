@@ -36,3 +36,26 @@ print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
 Examples
 --------
 For now, [refer to the test cases](https://github.com/sayanarijit/expandvars/blob/master/tests/test_expandvars.py) to see how it behaves.
+
+
+Contributing
+------------
+To contribute, setup environment following way:
+
+```bash
+# Clone repo
+git clone https://github.com/sayanarijit/expandvars && cd expandvars
+
+# Create virtualenv
+virtualenv .venv && source .venv/bin/activate
+
+# Install project
+pip install -e '.[testing]'
+
+# Optional install black, ipython
+pip install black ipython isort
+```
+
+- Follow [general git guidelines](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
+- Keep it simple. Use [black](https://github.com/python/black) to format code.
+- Keep it simple. Use [isort](https://pypi.org/project/isort) to sort imports.

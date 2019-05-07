@@ -1,15 +1,10 @@
-from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-from expandvars import __author__
-from expandvars import __description__
-from expandvars import __email__
-from expandvars import __license__
-from expandvars import __homepage__
-from expandvars import __license__
-from expandvars import __version__
+from setuptools import find_packages, setup
 
+from expandvars import (__author__, __description__, __email__, __homepage__,
+                        __license__, __version__)
 
 here = path.abspath(path.dirname(__file__))
 

@@ -2,12 +2,11 @@
 
 from os import environ
 
-
 __author__ = "Arijit Basu (https://arijitbasu.in)"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.1.4"
+__version__ = "v0.1.5"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
@@ -101,8 +100,15 @@ class Expander(object):
             return
 
         if ":" not in y:
-            if not y.isalnum():
+            if not y:
                 raise ValueError("bad substitution")
+            if not y.isalnum():
+                raise ValueError(
+                    "{}: syntax error: operand expected (error token is {})".format(
+                        y, repr(y)
+                    )
+                )
+
             if not _isint(y):
                 self._result.append(environ.get(x, ""))
                 del self._buffr[:]
@@ -120,7 +126,7 @@ class Expander(object):
 
         if not z.isalnum() and not _isint(z):
             raise ValueError(
-                "FOO: {}: syntax error: operand expected (error token is {})".format(
+                "{}: syntax error: operand expected (error token is {})".format(
                     z, repr(z)
                 )
             )

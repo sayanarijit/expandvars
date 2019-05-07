@@ -1,15 +1,14 @@
 import os
+
 import pytest
 
 from expandvars import expandvars
 
 
 def test_expandvars_constant():
-    os.environ.update({"FOO": "bar"})
     assert expandvars("FOO") == "FOO"
     assert expandvars("$") == "$"
     assert expandvars("BAR$") == "BAR$"
-    assert expandvars("bar$FOO") == "barbar"
 
 
 def test_expandvars_empty():
@@ -131,12 +130,12 @@ def test_invalid_operand_err():
     for o in oprnds:
         with pytest.raises(ValueError) as e:
             expandvars("${{FOO:{}}}".format(o))
-            assert e.value == (
-                "FOO: {}: syntax error: operand expected (error token is {})"
-            ).format(o, repr(o))
+        assert str(e.value) == (
+            "{}: syntax error: operand expected (error token is {})"
+        ).format(o, repr(o))
 
         with pytest.raises(ValueError) as e:
             expandvars("${{FOO:0:{}}}".format(o))
-            assert e.value == (
-                "FOO: {}: syntax error: operand expected (error token is {})"
-            ).format(o, repr(o))
+        assert str(e.value) == (
+            "{}: syntax error: operand expected (error token is {})"
+        ).format(o, repr(o))
