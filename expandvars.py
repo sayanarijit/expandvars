@@ -7,7 +7,7 @@ __author__ = "Arijit Basu (https://arijitbasu.in)"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.1.1"
+__version__ = "v0.1.2"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
@@ -26,12 +26,12 @@ def _isint(val):
 
 class Expander(object):
     """A class that helps expanding variables.
-    
+
     Params:
         vars_ (str): System variables to expand
 
     Example usage: ::
-        
+
         val = Expander('${FOO:-default}:${BAR:2:10}').result
     """
 
@@ -208,12 +208,12 @@ def expandvars(vars_):
 
     Params:
         vars_ (str): System variables to expand.
-    
+
     Returns:
         str: Expanded values.
-    
+
     Example usage: ::
-        
+
         val = expandvars('${FOO:-default}:${BAR:2:10}')
     """
     return Expander(vars_).result

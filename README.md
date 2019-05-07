@@ -11,6 +11,14 @@ Inspiration
 -----------
 This module is inspired by [GNU bash's variable expansion features](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html). It can be used as an alternative to Python's [os.path.expandvars](https://docs.python.org/3/library/os.path.html#os.path.expandvars) function.
 
+This can be better utilized to read variables from config files to get the capability to read values from environment variables.
+For example:
+
+```toml
+[default]
+my_secret_access_code = "${ACCESS_CODE:-default_access_code}"
+```
+
 > NOTE: Although it copies most of the common behaviours, it doesn't follow it strictly. For example, it doesn't work with arrays.
 
 
