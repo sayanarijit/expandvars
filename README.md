@@ -11,7 +11,7 @@ Inspiration
 -----------
 This module is inspired by [GNU bash's variable expansion features](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html). It can be used as an alternative to Python's [os.path.expandvars](https://docs.python.org/3/library/os.path.html#os.path.expandvars) function.
 
-This can be better utilized to read variables from config files to get the capability to read values from environment variables.
+A good use case is reading config files with the flexibility of reading values from environment variables using advanced features like returning a default value if some variable is not defined.
 For example:
 
 ```toml

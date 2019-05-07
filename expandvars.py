@@ -7,7 +7,7 @@ __author__ = "Arijit Basu (https://arijitbasu.in)"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.1.2"
+__version__ = "v0.1.3"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
