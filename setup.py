@@ -18,7 +18,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="expandpath",
+    name="expandvars",
     version=__version__,
     description=__description__,
     long_description=long_description,
