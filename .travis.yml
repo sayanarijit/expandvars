@@ -9,8 +9,9 @@ matrix:
       dist: xenial
       sudo: true
 install:
-  - pip install -e '.[testing]'
+  - pip install --upgrade setuptools
+  - pip uninstall -y pytest
 script:
-  - pytest --cov=expandvars
+  - python setup.py test
 after_success:
   - bash <(curl -s https://codecov.io/bash)
