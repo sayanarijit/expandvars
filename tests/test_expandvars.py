@@ -85,12 +85,16 @@ def test_offset_length():
 
 
 def test_escape():
-    os.environ.update({"FOO": "foo"})
-    assert expandvars("$FOO\\" + "$bar") == "foo$bar"
-    assert expandvars("$FOO\\" + "\\" + "\\" + "$bar") == "foo" + "\\" + "$bar"
-    assert expandvars("$FOO\\" + "$") == "foo$"
-    assert expandvars("$\\" + "FOO") == "$\\" + "FOO"
+    os.environ.update({"FOO": "foo", "BAR": "bar"})
+    assert expandvars("$FOO" + "$BAR") == "foobar"
+    assert expandvars("\\" + "$FOO" + "\\" + "$BAR") == "$FOO$BAR"
+    assert expandvars("$FOO" + "\\" + "$BAR") == "foo$BAR"
+    assert expandvars("\\" + "$FOO" + "$BAR") == "$FOObar"
+    assert expandvars("$FOO" + "\\" + "\\" + "\\" + "$BAR") == "foo" + "\\" + "\\" + "$BAR"
+    assert expandvars("$FOO" + "\\" + "$") == "foo$"
+    assert expandvars("$" + "\\" + "FOO") == "$" + "\\" + "FOO"
     assert expandvars("\\" + "$FOO") == "$FOO"
+    assert expandvars("D:\\some\\windows\\path") == "D:\\some\\windows\\path"
 
 
 def test_corner_cases():
@@ -103,7 +107,7 @@ def test_escape_not_followed_err():
     os.environ.update({"FOO": "foo"})
     with pytest.raises(ValueError) as e:
         expandvars("$FOO\\")
-    assert str(e.value) == "escape chracter is not escaping anything"
+    assert str(e.value) == "escape character is not escaping anything"
 
 
 def test_invalid_length_err():

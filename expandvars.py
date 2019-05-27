@@ -11,6 +11,9 @@ __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
 
+ESCAPE_CHAR = "\\"
+
+
 def _valid_char(char):
     return char.isalnum() or char == "_"
 
@@ -45,7 +48,7 @@ class Expander(object):
             return
         variter = iter(vars_)
         c = next(variter)
-        if c == "\\":
+        if c == ESCAPE_CHAR:
             self.escape(variter)
             return
         if c == "$":
@@ -66,10 +69,12 @@ class Expander(object):
         try:
             c = next(variter)
         except StopIteration:
-            raise ValueError("escape chracter is not escaping anything")
+            raise ValueError("escape character is not escaping anything")
         if c == "$":
             self._result.append(c)
             c = self._next_or_done(variter)
+        else:
+            self._result.append(ESCAPE_CHAR)
         self.expand_val(variter, c)
 
     def process_buffr(self):
@@ -150,7 +155,7 @@ class Expander(object):
         if not c:
             self._result.append("$")
             return
-        if c == "\\":
+        if c == ESCAPE_CHAR:
             self.expand_val(variter, "$\\")
             return
 
@@ -161,7 +166,7 @@ class Expander(object):
         while _valid_char(c):
             self._buffr.append(c)
             c = self._next_or_done(variter)
-            if c == "\\":
+            if c == ESCAPE_CHAR:
                 self.escape(variter)
                 return
             if not c:
@@ -198,7 +203,7 @@ class Expander(object):
         while c and c != "$":
             self._result.append(c)
             c = self._next_or_done(variter)
-            if c == "\\":
+            if c == ESCAPE_CHAR:
                 self.escape(variter)
                 return
         if c:
