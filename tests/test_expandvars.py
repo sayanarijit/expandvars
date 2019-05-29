@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 
 import pytest
@@ -86,14 +88,13 @@ def test_offset_length():
 
 def test_escape():
     os.environ.update({"FOO": "foo", "BAR": "bar"})
-    assert expandvars("$FOO" + "$BAR") == "foobar"
-    assert expandvars("\\" + "$FOO" + "\\" + "$BAR") == "$FOO$BAR"
-    assert expandvars("$FOO" + "\\" + "$BAR") == "foo$BAR"
-    assert expandvars("\\" + "$FOO" + "$BAR") == "$FOObar"
-    assert expandvars("$FOO" + "\\" + "\\" + "\\" + "$BAR") == "foo" + "\\" + "\\" + "$BAR"
-    assert expandvars("$FOO" + "\\" + "$") == "foo$"
-    assert expandvars("$" + "\\" + "FOO") == "$" + "\\" + "FOO"
-    assert expandvars("\\" + "$FOO") == "$FOO"
+    assert expandvars("\\$FOO\\$BAR") == "$FOO$BAR"
+    assert expandvars("$FOO\\$BAR") == "foo$BAR"
+    assert expandvars("\\$FOO$BAR") == "$FOObar"
+    assert expandvars("$FOO" "\\" "\\" "\\" "$BAR") == ("foo" "\\" "\\" "$BAR")
+    assert expandvars("$FOO\\$") == "foo$"
+    assert expandvars("$\\FOO") == "$\\FOO"
+    assert expandvars("\\$FOO") == "$FOO"
     assert expandvars("D:\\some\\windows\\path") == "D:\\some\\windows\\path"
 
 
