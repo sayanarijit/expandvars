@@ -1,3 +1,4 @@
+import sys
 from codecs import open
 from os import path
 
@@ -11,6 +12,16 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
+
+setup_requires = [
+    'pytest-runner'
+]
+
+tests_require = ['pytest', 'pytest-cov']
+
+dev_requires = ['tox']
+
+install_requires = []
 
 setup(
     name="expandvars",
@@ -49,6 +60,8 @@ setup(
     platforms=["Any"],
     keywords="expand system variables",
     packages=find_packages(exclude=["contrib", "docs", "tests", "examples"]),
-    install_requires=[],
-    extras_require={"testing": ["pytest>=4.4.1", 'pytest-cov>=2.7.1']},
+    install_requires=install_requires,
+    setup_requires=setup_requires,
+    tests_require=tests_require,
+    extras_require={"testing": tests_require, "dev": dev_requires},
 )
