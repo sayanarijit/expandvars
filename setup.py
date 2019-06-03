@@ -15,13 +15,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-setup_requires = [
-    'pytest-runner'
-]
+tests_require = ["pytest>=4.6.1", "pytest-cov>=2.7.1"]
 
-tests_require = ['pytest', 'pytest-cov']
-
-dev_requires = ['tox']
+dev_requires = ["tox>=3.7.0"] + tests_require
 
 install_requires = []
 
@@ -63,7 +59,6 @@ setup(
     keywords="expand system variables",
     packages=find_packages(exclude=["contrib", "docs", "tests", "examples"]),
     install_requires=install_requires,
-    setup_requires=setup_requires,
     tests_require=tests_require,
     extras_require={"testing": tests_require, "dev": dev_requires},
 )

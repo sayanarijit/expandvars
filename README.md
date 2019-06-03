@@ -59,5 +59,5 @@ pip install black ipython isort
 - Follow [general git guidelines](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
 - Keep it simple. Use [black](https://github.com/python/black) to format code.
 - Keep it simple. Use [isort](https://pypi.org/project/isort) to sort imports.
-- Test your changes locally by running `pytest` or `python setup.py test`.
+- Test your changes locally by running `pytest`.
 - If you are familiar with [tox](https://tox.readthedocs.io), you may want to use it for testing in different python versions.
