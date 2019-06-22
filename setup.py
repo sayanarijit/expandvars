@@ -6,8 +6,14 @@ from os import path
 
 from setuptools import find_packages, setup
 
-from expandvars import (__author__, __description__, __email__, __homepage__,
-                        __license__, __version__)
+from expandvars import (
+    __author__,
+    __description__,
+    __email__,
+    __homepage__,
+    __license__,
+    __version__,
+)
 
 here = path.abspath(path.dirname(__file__))
 
@@ -15,7 +21,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-tests_require = ["pytest>=4.6.1", "pytest-cov>=2.7.1"]
+tests_require = ["pytest>=4.6.1", "pytest-cov>=2.7.1", "black>=19.3b0"]
 
 dev_requires = ["tox>=3.7.0"] + tests_require
 
@@ -44,7 +50,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",

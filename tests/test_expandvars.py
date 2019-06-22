@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from expandvars import expandvars
 
 
@@ -16,18 +15,21 @@ def test_expandvars_constant():
 def test_expandvars_empty():
     if "FOO" in os.environ:
         del os.environ["FOO"]
+
     assert expandvars("") == ""
     assert expandvars("$FOO") == ""
 
 
 def test_expandvars_simple():
     os.environ.update({"FOO": "bar"})
+
     assert expandvars("$FOO") == "bar"
     assert expandvars("${FOO}") == "bar"
 
 
 def test_expandvars_combo():
     os.environ.update({"FOO": "bar", "BIZ": "buz"})
+
     assert expandvars("${FOO}:$BIZ") == "bar:buz"
     assert expandvars("$FOO$BIZ") == "barbuz"
     assert expandvars("${FOO}$BIZ") == "barbuz"
@@ -40,6 +42,7 @@ def test_expandvars_combo():
 def test_expandvars_get_default():
     if "FOO" in os.environ:
         del os.environ["FOO"]
+
     assert expandvars("${FOO:-default}") == "default"
     assert expandvars("${FOO:-}") == ""
 
@@ -47,8 +50,11 @@ def test_expandvars_get_default():
 def test_expandvars_update_default():
     if "FOO" in os.environ:
         del os.environ["FOO"]
+
     assert expandvars("${FOO:=}") == ""
+
     del os.environ["FOO"]
+
     assert expandvars("${FOO:=default}") == "default"
     assert os.environ.get("FOO") == "default"
     assert expandvars("${FOO:=ignoreme}") == "default"
@@ -58,6 +64,7 @@ def test_expandvars_substitute():
     if "BAR" in os.environ:
         del os.environ["BAR"]
     os.environ.update({"FOO": "bar"})
+
     assert expandvars("${FOO:+foo}") == "foo"
     assert expandvars("${BAR:+foo}") == ""
     assert expandvars("${BAR:+}") == ""
@@ -65,6 +72,7 @@ def test_expandvars_substitute():
 
 def test_offset():
     os.environ.update({"FOO": "damnbigfoobar"})
+
     assert expandvars("${FOO:3}") == "nbigfoobar"
     assert expandvars("${FOO: 4}") == "bigfoobar"
     assert expandvars("${FOO:30}") == ""
@@ -74,6 +82,7 @@ def test_offset():
 
 def test_offset_length():
     os.environ.update({"FOO": "damnbigfoobar"})
+
     assert expandvars("${FOO:4:3}") == "big"
     assert expandvars("${FOO: 7:6}") == "foobar"
     assert expandvars("${FOO:7: 100}") == "foobar"
@@ -88,6 +97,7 @@ def test_offset_length():
 
 def test_escape():
     os.environ.update({"FOO": "foo", "BAR": "bar"})
+
     assert expandvars("\\$FOO\\$BAR") == "$FOO$BAR"
     assert expandvars("$FOO\\$BAR") == "foo$BAR"
     assert expandvars("\\$FOO$BAR") == "$FOObar"
@@ -101,11 +111,30 @@ def test_escape():
 def test_corner_cases():
     if "FOO" in os.environ:
         del os.environ["FOO"]
+
     assert expandvars("${FOO:-{}}{}{}{}{{}}") == "{}{}{}{}{{}}"
+
+
+def test_strict_parsing():
+    if "FOO" in os.environ:
+        del os.environ["FOO"]
+
+    with pytest.raises(ValueError) as e:
+        expandvars("${FOO:?}")
+    assert str(e.value) == "FOO: parameter null or not set"
+
+    with pytest.raises(ValueError) as e:
+        expandvars("${FOO:?custom error}")
+    assert str(e.value) == "FOO: custom error"
+
+    os.environ.update({"FOO": "foo"})
+
+    assert expandvars("${FOO:?custom err}") == "foo"
 
 
 def test_escape_not_followed_err():
     os.environ.update({"FOO": "foo"})
+
     with pytest.raises(ValueError) as e:
         expandvars("$FOO\\")
     assert str(e.value) == "escape character is not escaping anything"
@@ -113,6 +142,7 @@ def test_escape_not_followed_err():
 
 def test_invalid_length_err():
     os.environ.update({"FOO": "damnbigfoobar"})
+
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:1:-3}")
     assert str(e.value) == "-3: substring expression < 0"
@@ -120,6 +150,7 @@ def test_invalid_length_err():
 
 def test_bad_syntax_err():
     os.environ.update({"FOO": "damnbigfoobar"})
+
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:}") == ""
     assert str(e.value) == "bad substitution"
@@ -127,9 +158,11 @@ def test_bad_syntax_err():
 
 def test_brace_never_closed_err():
     os.environ.update({"FOO": "damnbigfoobar"})
+
     with pytest.raises(ValueError) as e:
         expandvars("${FOO:")
     assert str(e.value) == "${FOO:: '{' was never closed."
+
     with pytest.raises(ValueError) as e:
         expandvars("${FOO}${BAR")
     assert str(e.value) == "${BAR: '{' was never closed."
@@ -138,6 +171,7 @@ def test_brace_never_closed_err():
 def test_invalid_operand_err():
     os.environ = {"FOO": "damnbigfoobar"}
     oprnds = "@#$%^&*()_'\"\\"
+
     for o in oprnds:
         with pytest.raises(ValueError) as e:
             expandvars("${{FOO:{}}}".format(o))

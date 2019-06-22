@@ -1,0 +1,42 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
+jobs:
+  Minimal-Test:
+    docker:
+      - image: python:2.7.16-stretch
+      - image: python:3.5.7-stretch
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            pip install -r requirements.txt
+            pip install pytest
+      - run:
+          name: Test
+          command: pytest
+  Advanced-Test:
+    docker:
+      - image: python:3.6.8-stretch
+      - image: python:3.7.3-stretch
+      - image: python:3.8.0b1-stretch
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            pip install -r dev-requirements.txt
+      - run:
+          name: Test
+          command: |
+            black --check .
+            pytest --cov=expandvars
+      - codecov/upload:
+          file: .coverage
+workflows:
+  version: 2
+  Install-And-Test:
+    jobs:
+      - Minimal-Test
+      - Advanced-Test

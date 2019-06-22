@@ -6,7 +6,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.3.1-pre"
+__version__ = "v0.4"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
@@ -57,6 +57,11 @@ class Expander(object):
         self.expand_val(variter, c)
 
     def _next_or_done(self, variter):
+        """Returns the next character or None if iteration is done.
+        
+        Arguments:
+            variter (list_iterator): Iterator of the variable being parsed.
+        """
         try:
             return next(variter)
         except StopIteration:
@@ -64,22 +69,33 @@ class Expander(object):
             return
 
     def escape(self, variter):
+        """Logic to escape characters.
+        
+        Arguments:
+            variter (list_iterator): Iterator of the variable being parsed.
+        """
         if self._buffr:
             self.process_buffr()
+
         try:
             c = next(variter)
         except StopIteration:
             raise ValueError("escape character is not escaping anything")
+
         if c == "$":
             self._result.append(c)
             c = self._next_or_done(variter)
         else:
             self._result.append(ESCAPE_CHAR)
+
         self.expand_val(variter, c)
 
     def process_buffr(self):
+        """Process the expression or variable in the buffer."""
+
         if not self._buffr:
             return
+
         if ":" not in self._buffr:
             self._result.append(environ.get("".join(self._buffr), ""))
             del self._buffr[:]
@@ -94,6 +110,16 @@ class Expander(object):
                 self._result.append(y)
             del self._buffr[:]
             return
+
+        if y.startswith("?"):
+            if x in environ:
+                self._result.append(environ[x])
+                del self._buffr[:]
+                return
+            err = y[1:]
+            if not err:
+                err = "parameter null or not set"
+            raise ValueError("{}: {}".format(x, err))
 
         if y.startswith("-") or y.startswith("="):
             _y = y[0]
@@ -149,6 +175,11 @@ class Expander(object):
         del self._buffr[:]
 
     def expand_var(self, variter):
+        """Continues the expansion of a variable.
+        
+        Arguments:
+            variter (list_iterator): Iterator of the variable being parsed.
+        """
         if self._buffr:
             self.process_buffr()
         c = self._next_or_done(variter)
@@ -178,6 +209,11 @@ class Expander(object):
         self.expand_val(variter, c)
 
     def expand_modifier_var(self, variter):
+        """Continues the expansion of a modifier variable.
+
+        Arguments:
+            variter (list_iterator): Iterator of the variable being parsed.
+        """
         try:
             c = next(variter)
             while c != "}":
@@ -198,6 +234,12 @@ class Expander(object):
         self.expand_val(variter, c)
 
     def expand_val(self, variter, c):
+        """Continues the expansion of a string.
+        
+        Arguments:
+            variter (list_iterator): Iterator of the variable being parsed.
+            c (str): the character to prepend if it's not "$".
+        """
         if self._buffr:
             self.process_buffr()
         while c and c != "$":
