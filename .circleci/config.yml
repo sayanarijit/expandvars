@@ -32,8 +32,10 @@ jobs:
           command: |
             black --check .
             pytest --cov=expandvars
-      - codecov/upload:
-          file: .coverage
+      - run:
+          name: Codecov
+          command: |
+            bash <(curl -s https://codecov.io/bash)
 workflows:
   version: 2
   Install-And-Test:
