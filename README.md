@@ -35,7 +35,7 @@ print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
 
 Examples
 --------
-For now, [refer to the test cases](https://github.com/sayanarijit/expandvars/blob/master/tests/test_expandvars.py) to see how it behaves.
+For now, [refer to the test cases](https://github.com/sayanarijit/expandvars/blob/master/tests) to see how it behaves.
 
 
 Contributing
