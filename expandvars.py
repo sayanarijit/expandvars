@@ -6,12 +6,22 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.4"
+__version__ = "v0.4.1"
 __license__ = "MIT"
 __all__ = ["Expander", "expandvars"]
 
 
 ESCAPE_CHAR = "\\"
+
+# Set EXPANDVARS_RECOVER_NULL="foo" if you want variables with
+# `${VAR:?}` syntax to fallback to "foo" if it's not defined.
+#
+# This helps with certain use cases where you need to temporarily
+# disable strict parsing of critical env vars. e.g. in testing
+# environment.
+#
+# See tests/test_recover_null.py for examples.
+RECOVER_NULL = environ.get("EXPANDVARS_RECOVER_NULL", None)
 
 
 def _valid_char(char):
@@ -114,6 +124,10 @@ class Expander(object):
         if y.startswith("?"):
             if x in environ:
                 self._result.append(environ[x])
+                del self._buffr[:]
+                return
+            elif RECOVER_NULL is not None:
+                self._result.append(RECOVER_NULL)
                 del self._buffr[:]
                 return
             err = y[1:]
