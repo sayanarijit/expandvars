@@ -7,9 +7,9 @@ from unittest.mock import patch
 import expandvars
 
 
-@patch.dict(env, {"EXPANDVARS_RECOVER_NULL": "foo"})
+@patch.dict(env, {"EXPANDVARS_RECOVER_NULL": "foo", "BAR": "bar"})
 def test_strict_parsing_recover_null():
     importlib.reload(expandvars)
 
-    assert expandvars.expandvars("${FOO:?}") == "foo"
-    assert expandvars.expandvars("${FOO:?custom err}") == "foo"
+    assert expandvars.expandvars("${FOO:?}:${BAR?}") == "foo:bar"
+    assert expandvars.expandvars("${FOO:?custom err}:${BAR?custom err}") == "foo:bar"
