@@ -6,7 +6,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.5.0"
+__version__ = "v0.5.1"
 __license__ = "MIT"
 __all__ = ["expandvars"]
 
@@ -285,14 +285,20 @@ def expandvars(vars_):
     if len(vars_) == 0:
         return ""
 
+    buff = []
+
     try:
-        if vars_[0] == "$":
-            return expand_var(vars_[1:])
+        for c in vars_:
+            if c == "$":
+                n = len(buff) + 1
+                return "".join(buff) + expand_var(vars_[n:])
 
-        if vars_[0] == ESCAPE_CHAR:
-            return escape(vars_[1:])
+            if c == ESCAPE_CHAR:
+                n = len(buff) + 1
+                return "".join(buff) + escape(vars_[n:])
 
-        return vars_[0] + expandvars(vars_[1:])
+            buff.append(c)
+        return "".join(buff)
     except MissingExcapedChar:
         raise MissingExcapedChar(vars_)
     except MissingClosingBrace:
