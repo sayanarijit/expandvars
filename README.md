@@ -19,7 +19,8 @@ For example:
 my_secret_access_code = "${ACCESS_CODE:-default_access_code}"
 ```
 
-> NOTE: Although it copies most of the common behaviours, it doesn't follow it strictly. For example, it doesn't work with arrays.
+> NOTE: Although this module copies most of the common behaviours of bash,
+> it doesn't follow bash strictly. For example, it doesn't work with arrays.
 
 
 Usage
