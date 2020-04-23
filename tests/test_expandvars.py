@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from os import environ as env
-
 import importlib
-import pytest
+from os import environ as env
 from unittest.mock import patch
 
 import expandvars
+import pytest
 
 
 @patch.dict(env, {})
@@ -51,8 +50,10 @@ def test_expandvars_combo():
 def test_expandvars_get_default():
     importlib.reload(expandvars)
 
+    assert expandvars.expandvars("${FOO-default}") == "default"
     assert expandvars.expandvars("${FOO:-default}") == "default"
     assert expandvars.expandvars("${FOO:-}") == ""
+    assert expandvars.expandvars("${FOO:-foo}:${FOO-bar}") == "foo:bar"
 
 
 @patch.dict(env, {})
@@ -60,21 +61,29 @@ def test_expandvars_update_default():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:=}") == ""
+    assert expandvars.expandvars("${FOO=}") == ""
 
     del env["FOO"]
 
     assert expandvars.expandvars("${FOO:=default}") == "default"
+    assert expandvars.expandvars("${FOO=default}") == "default"
     assert env.get("FOO") == "default"
     assert expandvars.expandvars("${FOO:=ignoreme}") == "default"
+    assert expandvars.expandvars("${FOO=ignoreme}:bar") == "default:bar"
 
 
-@patch.dict(env, {"FOO": "bar"})
+@patch.dict(env, {"FOO": "bar", "BUZ": "bar"})
 def test_expandvars_substitute():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:+foo}") == "foo"
+    assert expandvars.expandvars("${FOO+foo}") == "foo"
     assert expandvars.expandvars("${BAR:+foo}") == ""
+    assert expandvars.expandvars("${BAR+foo}") == ""
     assert expandvars.expandvars("${BAR:+}") == ""
+    assert expandvars.expandvars("${BAR+}") == ""
+    assert expandvars.expandvars("${BUZ:+foo}") == "foo"
+    assert expandvars.expandvars("${BUZ+foo}:bar") == "foo:bar"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
@@ -82,10 +91,10 @@ def test_offset():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:3}") == "nbigfoobar"
-    assert expandvars.expandvars("${FOO: 4}") == "bigfoobar"
+    assert expandvars.expandvars("${FOO: 4 }") == "bigfoobar"
     assert expandvars.expandvars("${FOO:30}") == ""
     assert expandvars.expandvars("${FOO:0}") == "damnbigfoobar"
-    assert expandvars.expandvars("${FOO:foo}") == "damnbigfoobar"
+    assert expandvars.expandvars("${FOO:-3}:bar") == "damnbigfoobar:bar"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
@@ -93,15 +102,15 @@ def test_offset_length():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:4:3}") == "big"
-    assert expandvars.expandvars("${FOO: 7:6}") == "foobar"
-    assert expandvars.expandvars("${FOO:7: 100}") == "foobar"
+    assert expandvars.expandvars("${FOO: 7:6 }") == "foobar"
+    assert expandvars.expandvars("${FOO:7: 100 }") == "foobar"
     assert expandvars.expandvars("${FOO:0:100}") == "damnbigfoobar"
     assert expandvars.expandvars("${FOO:70:10}") == ""
     assert expandvars.expandvars("${FOO:1:0}") == ""
     assert expandvars.expandvars("${FOO:0:}") == ""
-    assert expandvars.expandvars("${FOO:0:foo}") == ""
     assert expandvars.expandvars("${FOO::}") == ""
     assert expandvars.expandvars("${FOO::5}") == "damnb"
+    assert expandvars.expandvars("${FOO:-3:1}:bar") == "damnbigfoobar:bar"
 
 
 @patch.dict(env, {"FOO": "foo", "BAR": "bar"})
@@ -109,15 +118,18 @@ def test_escape():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("\\$FOO\\$BAR") == "$FOO$BAR"
+    assert expandvars.expandvars("\\\\$FOO") == "\\foo"
     assert expandvars.expandvars("$FOO\\$BAR") == "foo$BAR"
     assert expandvars.expandvars("\\$FOO$BAR") == "$FOObar"
-    assert expandvars.expandvars("$FOO" "\\" "\\" "\\" "$BAR") == (
-        "foo" "\\" "\\" "$BAR"
-    )
+    assert expandvars.expandvars("$FOO" "\\" "\\" "\\" "$BAR") == ("foo" "\\" "$BAR")
     assert expandvars.expandvars("$FOO\\$") == "foo$"
     assert expandvars.expandvars("$\\FOO") == "$\\FOO"
+    assert expandvars.expandvars("$\\$FOO") == "$$FOO"
     assert expandvars.expandvars("\\$FOO") == "$FOO"
-    assert expandvars.expandvars("D:\\some\\windows\\path") == "D:\\some\\windows\\path"
+    assert (
+        expandvars.expandvars("D:\\\\some\\windows\\path")
+        == "D:\\\\some\\windows\\path"
+    )
 
 
 @patch.dict(env, {})
@@ -125,58 +137,100 @@ def test_corner_cases():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:-{}}{}{}{}{{}}") == "{}{}{}{}{{}}"
+    assert expandvars.expandvars("${FOO-{}}{}{}{}{{}}") == "{}{}{}{}{{}}"
 
 
 @patch.dict(env, {})
 def test_strict_parsing():
     importlib.reload(expandvars)
 
-    with pytest.raises(ValueError, match="FOO: parameter null or not set"):
+    with pytest.raises(
+        expandvars.ParameterNullOrNotSet, match="FOO: parameter null or not set"
+    ):
         expandvars.expandvars("${FOO:?}")
 
-    with pytest.raises(ValueError, match="FOO: custom error"):
+    with pytest.raises(
+        expandvars.ParameterNullOrNotSet, match="FOO: parameter null or not set"
+    ):
+        expandvars.expandvars("${FOO?}")
+
+    with pytest.raises(expandvars.ParameterNullOrNotSet, match="FOO: custom error"):
         expandvars.expandvars("${FOO:?custom error}")
+
+    with pytest.raises(expandvars.ParameterNullOrNotSet, match="FOO: custom error"):
+        expandvars.expandvars("${FOO?custom error}")
 
     env.update({"FOO": "foo"})
 
     assert expandvars.expandvars("${FOO:?custom err}") == "foo"
+    assert expandvars.expandvars("${FOO?custom err}:bar") == "foo:bar"
 
 
 @patch.dict(env, {"FOO": "foo"})
-def test_escape_not_followed_err():
+def test_missing_escapped_character():
     importlib.reload(expandvars)
 
-    with pytest.raises(ValueError, match="escape character is not escaping anything"):
+    with pytest.raises(expandvars.MissingExcapedChar) as e:
         expandvars.expandvars("$FOO\\")
+
+    assert str(e.value) == "$FOO\\: missing escaped character"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
 def test_invalid_length_err():
     importlib.reload(expandvars)
 
-    with pytest.raises(ValueError, match="-3: substring expression < 0") as e:
+    with pytest.raises(
+        expandvars.NegativeSubStringExpression,
+        match="FOO: -3: substring expression < 0",
+    ):
         expandvars.expandvars("${FOO:1:-3}")
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
-def test_bad_syntax_err():
+def test_bad_substitution_err():
     importlib.reload(expandvars)
 
-    with pytest.raises(ValueError, match="bad substitution") as e:
+    with pytest.raises(expandvars.BadSubstitution) as e:
         expandvars.expandvars("${FOO:}") == ""
+    assert str(e.value) == "${FOO:}: bad substitution"
+
+    with pytest.raises(expandvars.BadSubstitution) as e:
+        expandvars.expandvars("${}") == ""
+    assert str(e.value) == "${}: bad substitution"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
 def test_brace_never_closed_err():
     importlib.reload(expandvars)
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
         expandvars.expandvars("${FOO:")
-    assert str(e.value) == "${FOO:: '{' was never closed."
+    assert str(e.value) == "${FOO:: missing '}'"
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
         expandvars.expandvars("${FOO}${BAR")
-    assert str(e.value) == "${BAR: '{' was never closed."
+    assert str(e.value) == "${FOO}${BAR: missing '}'"
+
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
+        expandvars.expandvars("${FOO?")
+    assert str(e.value) == "${FOO?: missing '}'"
+
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
+        expandvars.expandvars("${FOO:1")
+    assert str(e.value) == "${FOO:1: missing '}'"
+
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
+        expandvars.expandvars("${FOO:1:2")
+    assert str(e.value) == "${FOO:1:2: missing '}'"
+
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
+        expandvars.expandvars("${FOO+")
+    assert str(e.value) == "${FOO+: missing '}'"
+
+    with pytest.raises(expandvars.MissingClosingBrace) as e:
+        expandvars.expandvars("${FOO-")
+    assert str(e.value) == "${FOO-: missing '}'"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
@@ -186,14 +240,20 @@ def test_invalid_operand_err():
     oprnds = "@#$%^&*()_'\"\\"
 
     for o in oprnds:
-        with pytest.raises(ValueError) as e:
-            expandvars.expandvars("${{FOO:{}}}".format(o))
-        assert str(e.value) == (
-            "{0}: syntax error: operand expected (error token is {1})"
-        ).format(o, repr(o))
+        with pytest.raises(expandvars.OperandExpected) as e:
+            expandvars.expandvars("${{FOO:{0}}}".format(o))
+        assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
+            repr(o)
+        )
 
-        with pytest.raises(ValueError) as e:
-            expandvars.expandvars("${{FOO:0:{}}}".format(o))
-        assert str(e.value) == (
-            "{0}: syntax error: operand expected (error token is {1})"
-        ).format(o, repr(o))
+        with pytest.raises(expandvars.OperandExpected) as e:
+            expandvars.expandvars("${{FOO:0:{0}}}".format(o))
+        assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
+            repr(o)
+        )
+
+        with pytest.raises(expandvars.OperandExpected) as e:
+            expandvars.expandvars("${{FOO:{0}:{0}}}".format(o))
+        assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
+            repr(o)
+        )
