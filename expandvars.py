@@ -6,7 +6,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.5.1"
+__version__ = "v0.5.2"
 __license__ = "MIT"
 __all__ = ["expandvars"]
 
@@ -24,34 +24,40 @@ ESCAPE_CHAR = "\\"
 RECOVER_NULL = environ.get("EXPANDVARS_RECOVER_NULL", None)
 
 
-class MissingClosingBrace(SyntaxError):
+class ExpandvarsException(Exception):
+    """The base exception for all the handleable exceptions."""
+
+    pass
+
+
+class MissingClosingBrace(ExpandvarsException, SyntaxError):
     def __init__(self, param):
         super().__init__("{0}: missing '}}'".format(param))
 
 
-class MissingExcapedChar(SyntaxError):
+class MissingExcapedChar(ExpandvarsException, SyntaxError):
     def __init__(self, param):
         super().__init__("{0}: missing escaped character".format(param))
 
 
-class OperandExpected(SyntaxError):
+class OperandExpected(ExpandvarsException, SyntaxError):
     def __init__(self, param, operand):
         super().__init__(
             "{0}: operand expected (error token is {1})".format(param, repr(operand))
         )
 
 
-class NegativeSubStringExpression(IndexError):
+class NegativeSubStringExpression(ExpandvarsException, IndexError):
     def __init__(self, param, expr):
         super().__init__("{0}: {1}: substring expression < 0".format(param, expr))
 
 
-class BadSubstitution(SyntaxError):
+class BadSubstitution(ExpandvarsException, SyntaxError):
     def __init__(self, param):
         super().__init__("{0}: bad substitution".format(param))
 
 
-class ParameterNullOrNotSet(KeyError):
+class ParameterNullOrNotSet(ExpandvarsException, KeyError):
     def __init__(self, param, msg=None):
         if msg is None:
             msg = "parameter null or not set"
