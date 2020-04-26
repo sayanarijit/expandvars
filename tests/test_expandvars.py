@@ -145,20 +145,24 @@ def test_strict_parsing():
     importlib.reload(expandvars)
 
     with pytest.raises(
-        expandvars.ParameterNullOrNotSet, match="FOO: parameter null or not set"
-    ):
+        expandvars.ExpandvarsException, match="FOO: parameter null or not set"
+    ) as e:
         expandvars.expandvars("${FOO:?}")
+    assert isinstance(e.value, expandvars.ParameterNullOrNotSet)
 
     with pytest.raises(
-        expandvars.ParameterNullOrNotSet, match="FOO: parameter null or not set"
-    ):
+        expandvars.ExpandvarsException, match="FOO: parameter null or not set"
+    ) as e:
         expandvars.expandvars("${FOO?}")
+    assert isinstance(e.value, expandvars.ParameterNullOrNotSet)
 
-    with pytest.raises(expandvars.ParameterNullOrNotSet, match="FOO: custom error"):
+    with pytest.raises(expandvars.ExpandvarsException, match="FOO: custom error") as e:
         expandvars.expandvars("${FOO:?custom error}")
+    assert isinstance(e.value, expandvars.ParameterNullOrNotSet)
 
-    with pytest.raises(expandvars.ParameterNullOrNotSet, match="FOO: custom error"):
+    with pytest.raises(expandvars.ExpandvarsException, match="FOO: custom error") as e:
         expandvars.expandvars("${FOO?custom error}")
+    assert isinstance(e.value, expandvars.ParameterNullOrNotSet)
 
     env.update({"FOO": "foo"})
 
@@ -170,10 +174,11 @@ def test_strict_parsing():
 def test_missing_escapped_character():
     importlib.reload(expandvars)
 
-    with pytest.raises(expandvars.MissingExcapedChar) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("$FOO\\")
 
     assert str(e.value) == "$FOO\\: missing escaped character"
+    assert isinstance(e.value, expandvars.MissingExcapedChar)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
@@ -181,56 +186,65 @@ def test_invalid_length_err():
     importlib.reload(expandvars)
 
     with pytest.raises(
-        expandvars.NegativeSubStringExpression,
-        match="FOO: -3: substring expression < 0",
-    ):
+        expandvars.ExpandvarsException, match="FOO: -3: substring expression < 0",
+    ) as e:
         expandvars.expandvars("${FOO:1:-3}")
+    assert isinstance(e.value, expandvars.NegativeSubStringExpression)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
 def test_bad_substitution_err():
     importlib.reload(expandvars)
 
-    with pytest.raises(expandvars.BadSubstitution) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO:}") == ""
     assert str(e.value) == "${FOO:}: bad substitution"
+    assert isinstance(e.value, expandvars.BadSubstitution)
 
-    with pytest.raises(expandvars.BadSubstitution) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${}") == ""
     assert str(e.value) == "${}: bad substitution"
+    assert isinstance(e.value, expandvars.BadSubstitution)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
 def test_brace_never_closed_err():
     importlib.reload(expandvars)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO:")
     assert str(e.value) == "${FOO:: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO}${BAR")
     assert str(e.value) == "${FOO}${BAR: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO?")
     assert str(e.value) == "${FOO?: missing '}'"
+    assert isinstance(e.value, expandvars.ExpandvarsException)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO:1")
     assert str(e.value) == "${FOO:1: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO:1:2")
     assert str(e.value) == "${FOO:1:2: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO+")
     assert str(e.value) == "${FOO+: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
-    with pytest.raises(expandvars.MissingClosingBrace) as e:
+    with pytest.raises(expandvars.ExpandvarsException) as e:
         expandvars.expandvars("${FOO-")
     assert str(e.value) == "${FOO-: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"})
@@ -240,20 +254,23 @@ def test_invalid_operand_err():
     oprnds = "@#$%^&*()_'\"\\"
 
     for o in oprnds:
-        with pytest.raises(expandvars.OperandExpected) as e:
+        with pytest.raises(expandvars.ExpandvarsException) as e:
             expandvars.expandvars("${{FOO:{0}}}".format(o))
         assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
             repr(o)
         )
+        assert isinstance(e.value, expandvars.OperandExpected)
 
-        with pytest.raises(expandvars.OperandExpected) as e:
+        with pytest.raises(expandvars.ExpandvarsException) as e:
             expandvars.expandvars("${{FOO:0:{0}}}".format(o))
         assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
             repr(o)
         )
+        assert isinstance(e.value, expandvars.OperandExpected)
 
-        with pytest.raises(expandvars.OperandExpected) as e:
+        with pytest.raises(expandvars.ExpandvarsException) as e:
             expandvars.expandvars("${{FOO:{0}:{0}}}".format(o))
         assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
             repr(o)
         )
+        assert isinstance(e.value, expandvars.OperandExpected)
