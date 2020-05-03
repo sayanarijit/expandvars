@@ -131,9 +131,6 @@ def expand_modifier_var(vars_):
     for c in vars_:
         if _valid_char(c):
             buff.append(c)
-        elif c == "}":
-            n = len(buff) + 1
-            return environ.get("".join(buff), "") + expandvars(vars_[n:])
         elif c == ":":
             n = len(buff) + 1
             return expand_advanced("".join(buff), vars_[n:])
