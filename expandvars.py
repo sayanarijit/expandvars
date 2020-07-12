@@ -255,6 +255,10 @@ def expand_substitute(var, vars_):
             return expandvars(vars_[n:])
         sub.append(c)
     raise MissingClosingBrace("".join(sub))
+    
+def some_test_func():
+    # Some logic
+    a = 1
 
 
 def expand_default(var, vars_, set_=False):
