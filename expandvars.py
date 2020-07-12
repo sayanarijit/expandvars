@@ -256,6 +256,7 @@ def expand_substitute(var, vars_):
         sub.append(c)
     raise MissingClosingBrace("".join(sub))
     
+
 def some_test_func():
     # Some logic
     a = 1
