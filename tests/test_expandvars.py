@@ -33,6 +33,14 @@ def test_expandvars_simple():
     assert expandvars.expandvars("${FOO}") == "bar"
 
 
+@patch.dict(env, {"FOO": "bar"})
+def test_expandvars_from_file():
+    importlib.reload(expandvars)
+
+    with open("tests/data/foo.txt") as f:
+        assert expandvars.expandvars(f) == "bar:bar"
+
+
 @patch.dict(env, {"FOO": "bar", "BIZ": "buz"})
 def test_expandvars_combo():
     importlib.reload(expandvars)
