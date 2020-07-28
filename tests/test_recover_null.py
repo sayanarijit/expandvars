@@ -13,3 +13,6 @@ def test_strict_parsing_recover_null():
 
     assert expandvars.expandvars("${FOO:?}:${BAR?}") == "foo:bar"
     assert expandvars.expandvars("${FOO:?custom err}:${BAR?custom err}") == "foo:bar"
+
+    assert expandvars.expandvars("$FOO$BAR", nounset=True) == "foobar"
+    assert expandvars.expandvars("${FOO}:${BAR}", nounset=True) == "foo:bar"

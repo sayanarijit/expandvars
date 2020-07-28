@@ -17,6 +17,8 @@ For example:
 ```toml
 [default]
 my_secret_access_code = "${ACCESS_CODE:-default_access_code}"
+my_important_variable = "${IMPORTANT_VARIABLE:?}"
+my_updated_path = "$PATH:$HOME/.bin"
 ```
 
 > NOTE: Although this module copies most of the common behaviours of bash,
@@ -29,7 +31,7 @@ Usage
 ```python
 from expandvars import expandvars
 
-print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
+print(expandvars("$PATH:${HOME:?}/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
 # /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/default/path
 ```
 
@@ -37,6 +39,36 @@ print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
 Examples
 --------
 For now, [refer to the test cases](https://github.com/sayanarijit/expandvars/blob/master/tests) to see how it behaves.
+
+
+TIPs
+----
+
+### nounset=True
+
+If you want to enable strict parsing by default, (similar to `set -u` / `set -o nounset` in bash), pass `nounset=True`.
+
+```python
+# All the variables must be defined.
+expandvars("$VAR1:${VAR2}:$VAR3", nounset=True)
+
+# Raises UnboundVariable error.
+```
+
+> NOTE: Another way is to use the `${VAR?}` or `${VAR:?}` syntax. See the examples in tests.
+
+### EXPANDVARS_RECOVER_NULL="foo"
+
+If you want to temporarily disable strict parsing both for `nounset=True` and the `${VAR:?}` syntax, set environment variable `EXPANDVARS_RECOVER_NULL=somevalue`.
+This helps with certain use cases where you need to temporarily disable strict parsing of critical env vars, e.g. in testing environment, without modifying the code.
+
+e.g.
+
+```bash
+EXPANDVARS_RECOVER_NULL=foo myapp --config production.ini && echo "All fine."
+```
+
+> WARNING: Try to avoid `export EXPANDVARS_RECOVER_NULL` because that will disable strict parsing permanently until you log out.
 
 
 Contributing
