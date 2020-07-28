@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os import environ
+from io import TextIOWrapper
 
 __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
@@ -287,7 +288,15 @@ def expandvars(vars_):
 
         print(expandvars("$PATH:$HOME/bin:${SOME_UNDEFINED_PATH:-/default/path}"))
         # /bin:/sbin:/usr/bin:/usr/sbin:/home/you/bin:/default/path
+
+        # Or
+        with open(somefile) as f:
+            print(expandvars(f))
     """
+    if isinstance(vars_, TextIOWrapper):
+        # This is a file. Read it.
+        vars_ = vars_.read().strip()
+
     if len(vars_) == 0:
         return ""
 
