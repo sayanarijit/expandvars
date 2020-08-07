@@ -3,7 +3,6 @@ expandvars
 Expand system variables Unix style
 
 [![PyPI version](https://img.shields.io/pypi/v/expandvars.svg)](https://pypi.org/project/expandvars)
-[![CircleCI](https://circleci.com/gh/sayanarijit/expandvars/tree/master.svg?style=svg)](https://circleci.com/gh/sayanarijit/expandvars/tree/master)
 [![codecov](https://codecov.io/gh/sayanarijit/expandvars/branch/master/graph/badge.svg)](https://codecov.io/gh/sayanarijit/expandvars)
 
 
