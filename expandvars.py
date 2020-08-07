@@ -7,9 +7,19 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.6.0"
+__version__ = "v0.6.1"
 __license__ = "MIT"
-__all__ = ["expandvars"]
+__all__ = [
+    "BadSubstitution",
+    "ExpandvarsException",
+    "MissingClosingBrace",
+    "MissingExcapedChar",
+    "NegativeSubStringExpression",
+    "OperandExpected",
+    "ParameterNullOrNotSet",
+    "UnboundVariable",
+    "expandvars",
+]
 
 
 ESCAPE_CHAR = "\\"

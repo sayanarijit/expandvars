@@ -1,0 +1,43 @@
+[tool]
+[tool.poetry]
+name = "expandvars"
+version = "0.6.1"
+description = "Expand system variables Unix style"
+license = "MIT"
+keywords = ["expand", "system", "variables"]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Developers",
+	"Intended Audience :: Information Technology",
+	"Intended Audience :: Other Audience",
+	"License :: OSI Approved :: MIT License",
+	"Natural Language :: English",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.5",
+	"Programming Language :: Python :: 3.6",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Topic :: Utilities",
+	"Topic :: Software Development",
+	"Operating System :: MacOS",
+	"Operating System :: Unix",
+	"Operating System :: POSIX",
+	"Operating System :: Microsoft"
+]
+homepage = "https://github.com/sayanarijit/expandvars"
+authors = ["Arijit Basu <sayanarijit@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "*"
+
+[tool.poetry.dev-dependencies]
+tox = ">=3.7.0"
+pytest = {version = ">=4.6.1", optional = true}
+pytest-cov = {version = ">=2.7.1", optional = true}
+
+[tool.poetry.extras]
+testing = ["pytest", "pytest-cov"]
+
+[tool.pytest]
+addopts = "--cov --cov-report=html --cov-fail-under=100"

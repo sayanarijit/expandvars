@@ -75,18 +75,19 @@ Contributing
 ------------
 To contribute, setup environment following way:
 
+First you need to [install poetry](https://python-poetry.org/docs/#installation).
+
+Then
+
 ```bash
 # Clone repo
 git clone https://github.com/sayanarijit/expandvars && cd expandvars
 
-# Create virtualenv
-virtualenv .venv && source .venv/bin/activate
-
-# Install library in edit mode along with other handy dev tools
-pip install -r dev-requirements.txt
+# Install poetry dependencies
+poetry install
 ```
 
 - Follow [general git guidelines](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
-- Keep it simple. Use [black](https://github.com/python/black) to format code.
-- Test your changes locally by running `pytest`.
+- Keep it simple. Run `poetry run black` to auto format the code.
+- Test your changes locally by running `poetry run pytest` (pass `--cov --cov-report html` for browsable coverage report).
 - If you are familiar with [tox](https://tox.readthedocs.io), you may want to use it for testing in different python versions.
