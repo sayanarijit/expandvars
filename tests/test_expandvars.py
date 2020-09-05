@@ -300,3 +300,31 @@ def test_invalid_operand_err():
             repr(o)
         )
         assert isinstance(e.value, expandvars.OperandExpected)
+
+
+@pytest.mark.parametrize("var_symbol", ["%", "&", "£", "="])
+def test_expand_var_symbol(var_symbol):
+    assert (
+        expandvars.expand(
+            var_symbol + "{FOO}", environ={"FOO": "test"}, var_symbol=var_symbol
+        )
+        == "test"
+    )
+    assert (
+        expandvars.expand(var_symbol + "FOO", environ={}, var_symbol=var_symbol) == ""
+    )
+    assert (
+        expandvars.expand(
+            var_symbol + "{FOO:-default_value}", environ={}, var_symbol=var_symbol
+        )
+        == "default_value"
+    )
+    with pytest.raises(expandvars.ParameterNullOrNotSet):
+        expandvars.expand(var_symbol + "{FOO:?}", environ={}, var_symbol=var_symbol)
+
+    assert (
+        expandvars.expand(
+            var_symbol + "{FOO},$HOME", environ={"FOO": "test"}, var_symbol=var_symbol
+        )
+        == "test,$HOME"
+    )

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from os import environ, getpid
+import os
+
 from io import TextIOWrapper
 
 __author__ = "Arijit Basu"
@@ -36,7 +37,7 @@ ESCAPE_CHAR = "\\"
 #
 # WARNING: Try to avoid `export EXPANDVARS_RECOVER_NULL` as it
 # will permanently disable strict parsing until you log out.
-RECOVER_NULL = environ.get("EXPANDVARS_RECOVER_NULL", None)
+RECOVER_NULL = os.environ.get("EXPANDVARS_RECOVER_NULL", None)
 
 
 class ExpandvarsException(Exception):
@@ -96,7 +97,7 @@ def _isint(val):
         return False
 
 
-def getenv(var, nounset, indirect, default=None):
+def getenv(var, nounset, indirect, environ, default=None):
     """Get value from environment variable.
 
     When nounset is True, it behaves like bash's "set -o nounset" or "set -u"
@@ -123,7 +124,7 @@ def getenv(var, nounset, indirect, default=None):
     return ""
 
 
-def escape(vars_, nounset):
+def escape(vars_, nounset, environ, var_symbol):
     """Escape the first character."""
     if len(vars_) == 0:
         raise MissingExcapedChar(vars_)
@@ -131,32 +132,46 @@ def escape(vars_, nounset):
     if len(vars_) == 1:
         return vars_[0]
 
-    if vars_[0] == "$":
-        return vars_[0] + expandvars(vars_[1:])
+    if vars_[0] == var_symbol:
+        return vars_[0] + expand(vars_[1:], environ=environ, var_symbol=var_symbol)
 
     if vars_[0] == ESCAPE_CHAR:
-        if vars_[1] == "$":
-            return ESCAPE_CHAR + expandvars(vars_[1:], nounset=nounset)
+        if vars_[1] == var_symbol:
+            return ESCAPE_CHAR + expand(
+                vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
         if vars_[1] == ESCAPE_CHAR:
-            return ESCAPE_CHAR + escape(vars_[2:], nounset=nounset)
+            return ESCAPE_CHAR + escape(
+                vars_[2:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
 
-    return ESCAPE_CHAR + vars_[0] + expandvars(vars_[1:], nounset=nounset)
+    return (
+        ESCAPE_CHAR
+        + vars_[0]
+        + expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol)
+    )
 
 
-def expand_var(vars_, nounset):
+def expand_var(vars_, nounset, environ, var_symbol):
     """Expand a single variable."""
 
     if len(vars_) == 0:
-        return "$"
+        return var_symbol
 
     if vars_[0] == ESCAPE_CHAR:
-        return "$" + escape(vars_[1:], nounset=nounset)
+        return var_symbol + escape(
+            vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+        )
 
-    if vars_[0] == "$":
-        return str(getpid()) + expandvars(vars_[1:], nounset=nounset)
+    if vars_[0] == var_symbol:
+        return str(os.getpid()) + expand(
+            vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+        )
 
     if vars_[0] == "{":
-        return expand_modifier_var(vars_[1:], nounset=nounset)
+        return expand_modifier_var(
+            vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+        )
 
     buff = []
     for c in vars_:
@@ -164,13 +179,15 @@ def expand_var(vars_, nounset):
             buff.append(c)
         else:
             n = len(buff)
-            return getenv("".join(buff), nounset=nounset, indirect=False) + expandvars(
-                vars_[n:], nounset=nounset
+            return getenv(
+                "".join(buff), nounset=nounset, indirect=False, environ=environ
+            ) + expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
             )
-    return getenv("".join(buff), nounset=nounset, indirect=False)
+    return getenv("".join(buff), nounset=nounset, indirect=False, environ=environ)
 
 
-def expand_modifier_var(vars_, nounset):
+def expand_modifier_var(vars_, nounset, environ, var_symbol):
     """Expand variables with modifier."""
 
     if len(vars_) <= 1:
@@ -189,20 +206,27 @@ def expand_modifier_var(vars_, nounset):
         elif c == "}":
             n = len(buff) + 1
             return getenv(
-                "".join(buff), nounset=nounset, indirect=indirect
-            ) + expandvars(vars_[n:], nounset=nounset)
+                "".join(buff), nounset=nounset, indirect=indirect, environ=environ
+            ) + expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
         else:
             n = len(buff)
             if c == ":":
                 n += 1
             return expand_advanced(
-                "".join(buff), vars_[n:], nounset=nounset, indirect=indirect
+                "".join(buff),
+                vars_[n:],
+                nounset=nounset,
+                indirect=indirect,
+                environ=environ,
+                var_symbol=var_symbol,
             )
 
     raise MissingClosingBrace("".join(buff))
 
 
-def expand_advanced(var, vars_, nounset, indirect):
+def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
     """Expand substitution."""
 
     if len(vars_) == 0:
@@ -210,24 +234,42 @@ def expand_advanced(var, vars_, nounset, indirect):
 
     if vars_[0] == "-":
         return expand_default(
-            var, vars_[1:], set_=False, nounset=nounset, indirect=indirect
+            var,
+            vars_[1:],
+            set_=False,
+            nounset=nounset,
+            indirect=indirect,
+            environ=environ,
+            var_symbol=var_symbol,
         )
 
     if vars_[0] == "=":
         return expand_default(
-            var, vars_[1:], set_=True, nounset=nounset, indirect=indirect
+            var,
+            vars_[1:],
+            set_=True,
+            nounset=nounset,
+            indirect=indirect,
+            environ=environ,
+            var_symbol=var_symbol,
         )
 
     if vars_[0] == "+":
-        return expand_substitute(var, vars_[1:], nounset=nounset)
+        return expand_substitute(
+            var, vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+        )
 
     if vars_[0] == "?":
-        return expand_strict(var, vars_[1:], nounset=nounset)
+        return expand_strict(
+            var, vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+        )
 
-    return expand_offset(var, vars_, nounset=nounset)
+    return expand_offset(
+        var, vars_, nounset=nounset, environ=environ, var_symbol=var_symbol
+    )
 
 
-def expand_strict(var, vars_, nounset):
+def expand_strict(var, vars_, nounset, environ, var_symbol):
     """Expand variable that must be defined."""
 
     buff = []
@@ -236,9 +278,13 @@ def expand_strict(var, vars_, nounset):
             n = len(buff) + 1
             val = environ.get(var, "")
             if val:
-                return val + expandvars(vars_[n:], nounset=nounset)
+                return val + expand(
+                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+                )
             if RECOVER_NULL is not None:
-                return RECOVER_NULL + expandvars(vars_[n:], nounset=nounset)
+                return RECOVER_NULL + expand(
+                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+                )
             raise ParameterNullOrNotSet(var, "".join(buff) if buff else None)
 
         buff.append(c)
@@ -246,7 +292,7 @@ def expand_strict(var, vars_, nounset):
     raise MissingClosingBrace("".join(buff))
 
 
-def expand_offset(var, vars_, nounset):
+def expand_offset(var, vars_, nounset, environ, var_symbol):
     """Expand variable with offset."""
 
     buff = []
@@ -260,7 +306,14 @@ def expand_offset(var, vars_, nounset):
                 raise OperandExpected(var, offset_str)
             else:
                 offset = int(offset_str)
-            return expand_length(var, vars_[n:], offset, nounset=nounset)
+            return expand_length(
+                var,
+                vars_[n:],
+                offset,
+                nounset=nounset,
+                environ=environ,
+                var_symbol=var_symbol,
+            )
 
         if c == "}":
             n = len(buff) + 1
@@ -271,14 +324,16 @@ def expand_offset(var, vars_, nounset):
                 raise OperandExpected(var, offset_str)
             else:
                 offset = int(offset_str)
-            return getenv(var, nounset=nounset, indirect=False)[offset:] + expandvars(
-                vars_[n:], nounset=nounset
+            return getenv(var, nounset=nounset, indirect=False, environ=environ)[
+                offset:
+            ] + expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
             )
         buff.append(c)
     raise MissingClosingBrace("".join(buff))
 
 
-def expand_length(var, vars_, offset, nounset):
+def expand_length(var, vars_, offset, nounset, environ, var_symbol):
     """Expand variable with offset and length."""
 
     buff = []
@@ -302,15 +357,17 @@ def expand_length(var, vars_, offset, nounset):
             else:
                 width = offset + length
 
-            return getenv(var, nounset=nounset, indirect=False)[
+            return getenv(var, nounset=nounset, indirect=False, environ=environ)[
                 offset:width
-            ] + expandvars(vars_[n:], nounset=nounset)
+            ] + expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
 
         buff.append(c)
     raise MissingClosingBrace("".join(buff))
 
 
-def expand_substitute(var, vars_, nounset):
+def expand_substitute(var, vars_, nounset, environ, var_symbol):
     """Expand or return substitute."""
 
     sub = []
@@ -318,13 +375,17 @@ def expand_substitute(var, vars_, nounset):
         if c == "}":
             n = len(sub) + 1
             if var in environ:
-                return "".join(sub) + expandvars(vars_[n:], nounset=nounset)
-            return expandvars(vars_[n:], nounset=nounset)
+                return "".join(sub) + expand(
+                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+                )
+            return expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
         sub.append(c)
     raise MissingClosingBrace("".join(sub))
 
 
-def expand_default(var, vars_, set_, nounset, indirect):
+def expand_default(var, vars_, set_, nounset, indirect, environ, var_symbol):
     """Expand var or return default."""
 
     default = []
@@ -335,11 +396,73 @@ def expand_default(var, vars_, set_, nounset, indirect):
             if set_ and var not in environ:
                 environ.update({var: default_})
             return getenv(
-                var, nounset=nounset, indirect=indirect, default=default_
-            ) + expandvars(vars_[n:], nounset=nounset)
+                var,
+                nounset=nounset,
+                indirect=indirect,
+                default=default_,
+                environ=environ,
+            ) + expand(
+                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            )
 
         default.append(c)
     raise MissingClosingBrace("".join(default))
+
+
+def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
+    """Expand variables Unix style.
+
+    Params:
+        vars_ (str):  Variables to expand.
+        nounset (bool): If True, enables strict parsing (similar to set -u / set -o nounset in bash).
+        environ (Mapping): Elements to consider during variable expansion. Defaults to os.environ
+        var_symbol (str): Character used to identify a variable. Defaults to $
+
+    Returns:
+        str: Expanded values.
+
+    Example usage: ::
+
+        from expandvars import expand
+
+        print(expandvars("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "example"}, var_symbol="%"))
+        # example:$HOME/bin:/default/path
+
+        # Or
+        with open(somefile) as f:
+            print(expand(f))
+    """
+    if isinstance(vars_, TextIOWrapper):
+        # This is a file. Read it.
+        vars_ = vars_.read().strip()
+
+    if len(vars_) == 0:
+        return ""
+
+    buff = []
+
+    try:
+        for c in vars_:
+            if c == var_symbol:
+                n = len(buff) + 1
+                return "".join(buff) + expand_var(
+                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+                )
+
+            if c == ESCAPE_CHAR:
+                n = len(buff) + 1
+                return "".join(buff) + escape(
+                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
+                )
+
+            buff.append(c)
+        return "".join(buff)
+    except MissingExcapedChar:
+        raise MissingExcapedChar(vars_)
+    except MissingClosingBrace:
+        raise MissingClosingBrace(vars_)
+    except BadSubstitution:
+        raise BadSubstitution(vars_)
 
 
 def expandvars(vars_, nounset=False):
@@ -347,6 +470,7 @@ def expandvars(vars_, nounset=False):
 
     Params:
         vars_ (str): System variables to expand.
+        nounset (bool): If True, enables strict parsing (similar to set -u / set -o nounset in bash).
 
     Returns:
         str: Expanded values.
@@ -362,30 +486,4 @@ def expandvars(vars_, nounset=False):
         with open(somefile) as f:
             print(expandvars(f))
     """
-    if isinstance(vars_, TextIOWrapper):
-        # This is a file. Read it.
-        vars_ = vars_.read().strip()
-
-    if len(vars_) == 0:
-        return ""
-
-    buff = []
-
-    try:
-        for c in vars_:
-            if c == "$":
-                n = len(buff) + 1
-                return "".join(buff) + expand_var(vars_[n:], nounset=nounset)
-
-            if c == ESCAPE_CHAR:
-                n = len(buff) + 1
-                return "".join(buff) + escape(vars_[n:], nounset=nounset)
-
-            buff.append(c)
-        return "".join(buff)
-    except MissingExcapedChar:
-        raise MissingExcapedChar(vars_)
-    except MissingClosingBrace:
-        raise MissingClosingBrace(vars_)
-    except BadSubstitution:
-        raise BadSubstitution(vars_)
+    return expand(vars_, nounset=nounset)
