@@ -71,6 +71,16 @@ EXPANDVARS_RECOVER_NULL=foo myapp --config production.ini && echo "All fine."
 
 > WARNING: Try to avoid `export EXPANDVARS_RECOVER_NULL` because that will disable strict parsing permanently until you log out.
 
+### Customization
+
+You can customize the variable symbol and data used for the expansion by using the more general `expand` method.
+
+```python
+from expandvars import expand
+
+print(expandvars("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "example"}, var_symbol="%"))
+# example:$HOME/bin:/default/path
+```
 
 Contributing
 ------------
