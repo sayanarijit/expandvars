@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "expandvars"
-version = "0.6.4"  # Also update expandvars.py
+version = "0.6.5"  # Also update expandvars.py
 description = "Expand system variables Unix style"
 license = "MIT"
 keywords = ["expand", "system", "variables"]

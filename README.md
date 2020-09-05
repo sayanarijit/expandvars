@@ -78,8 +78,8 @@ You can customize the variable symbol and data used for the expansion by using t
 ```python
 from expandvars import expand
 
-print(expandvars("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "example"}, var_symbol="%"))
-# example:$HOME/bin:/default/path
+print(expand("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "/example"}, var_symbol="%"))
+# /example:$HOME/bin:/default/path
 ```
 
 Contributing

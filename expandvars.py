@@ -8,7 +8,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.6.4"  # Also update pyproject.toml
+__version__ = "v0.6.5"  # Also update pyproject.toml
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -425,8 +425,8 @@ def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
 
         from expandvars import expand
 
-        print(expandvars("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "example"}, var_symbol="%"))
-        # example:$HOME/bin:/default/path
+        print(expand("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "/example"}, var_symbol="%"))
+        # /example:$HOME/bin:/default/path
 
         # Or
         with open(somefile) as f:
