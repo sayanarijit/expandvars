@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from os import environ
+from os import environ, getpid
 from io import TextIOWrapper
 
 __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.6.2"
+__version__ = "v0.6.3"  # Also update pyproject.toml
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -126,7 +126,7 @@ def escape(vars_, nounset):
 
     if vars_[0] == ESCAPE_CHAR:
         if vars_[1] == "$":
-            return ESCAPE_CHAR + expand_var(vars_[1:], nounset=nounset)
+            return ESCAPE_CHAR + expandvars(vars_[1:], nounset=nounset)
         if vars_[1] == ESCAPE_CHAR:
             return ESCAPE_CHAR + escape(vars_[2:], nounset=nounset)
 
@@ -142,6 +142,9 @@ def expand_var(vars_, nounset):
     if vars_[0] == ESCAPE_CHAR:
         return "$" + escape(vars_[1:], nounset=nounset)
 
+    if vars_[0] == "$":
+        return str(getpid()) + expandvars(vars_[1:], nounset=nounset)
+
     if vars_[0] == "{":
         return expand_modifier_var(vars_[1:], nounset=nounset)
 
@@ -149,11 +152,6 @@ def expand_var(vars_, nounset):
     for c in vars_:
         if _valid_char(c):
             buff.append(c)
-        elif c == "$":
-            n = len(buff) + 1
-            return getenv("".join(buff), nounset=nounset) + expand_var(
-                vars_[n:], nounset=nounset
-            )
         else:
             n = len(buff)
             return getenv("".join(buff), nounset=nounset) + expandvars(

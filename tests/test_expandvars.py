@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from os import environ as env
+from os import environ as env, getpid
 from unittest.mock import patch
 
 import expandvars
@@ -53,6 +53,13 @@ def test_expandvars_combo():
     assert expandvars.expandvars("boo$BIZ") == "boobuz"
     assert expandvars.expandvars("boo${BIZ}") == "boobuz"
 
+
+@patch.dict(env, {})
+def test_expandvars_pid():
+    importlib.reload(expandvars)
+
+    assert expandvars.expandvars("$$") == str(getpid())
+    assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
 
 @patch.dict(env, {})
 def test_expandvars_get_default():
