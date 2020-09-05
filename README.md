@@ -73,7 +73,7 @@ EXPANDVARS_RECOVER_NULL=foo myapp --config production.ini && echo "All fine."
 
 ### Customization
 
-You can customize the variable symbol and data used for the expansion by using the more general `expand` method.
+You can customize the variable symbol and data used for the expansion by using the more general `expand` function.
 
 ```python
 from expandvars import expand
