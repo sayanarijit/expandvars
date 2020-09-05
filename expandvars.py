@@ -96,16 +96,26 @@ def _isint(val):
         return False
 
 
-def getenv(var, nounset):
+def getenv(var, nounset, indirect, default=None):
     """Get value from environment variable.
 
     When nounset is True, it behaves like bash's "set -o nounset" or "set -u"
     and raises UnboundVariable exception.
+
+    When indirect is True, it will use the value of the resolved variable as
+    the name of the final variable.
     """
 
     val = environ.get(var)
+    if val is not None and indirect:
+        val = environ.get(val)
+
     if val is not None:
         return val
+
+    if default is not None:
+        return default
+
     if nounset:
         if RECOVER_NULL is not None:
             return RECOVER_NULL
@@ -154,17 +164,23 @@ def expand_var(vars_, nounset):
             buff.append(c)
         else:
             n = len(buff)
-            return getenv("".join(buff), nounset=nounset) + expandvars(
+            return getenv("".join(buff), nounset=nounset, indirect=False) + expandvars(
                 vars_[n:], nounset=nounset
             )
-    return getenv("".join(buff), nounset=nounset)
+    return getenv("".join(buff), nounset=nounset, indirect=False)
 
 
 def expand_modifier_var(vars_, nounset):
     """Expand variables with modifier."""
 
-    if len(vars_) == 1:
+    if len(vars_) <= 1:
         raise BadSubstitution(vars_)
+
+    if vars_[0] == "!":
+        indirect = True
+        vars_ = vars_[1:]
+    else:
+        indirect = False
 
     buff = []
     for c in vars_:
@@ -172,29 +188,35 @@ def expand_modifier_var(vars_, nounset):
             buff.append(c)
         elif c == "}":
             n = len(buff) + 1
-            return getenv("".join(buff), nounset=nounset) + expandvars(
-                vars_[n:], nounset=nounset
-            )
-        elif c == ":":
-            n = len(buff) + 1
-            return expand_advanced("".join(buff), vars_[n:], nounset=nounset)
+            return getenv(
+                "".join(buff), nounset=nounset, indirect=indirect
+            ) + expandvars(vars_[n:], nounset=nounset)
         else:
             n = len(buff)
-            return expand_advanced("".join(buff), vars_[n:], nounset=nounset)
+            if c == ":":
+                n += 1
+            return expand_advanced(
+                "".join(buff), vars_[n:], nounset=nounset, indirect=indirect
+            )
+
     raise MissingClosingBrace("".join(buff))
 
 
-def expand_advanced(var, vars_, nounset):
+def expand_advanced(var, vars_, nounset, indirect):
     """Expand substitution."""
 
     if len(vars_) == 0:
         raise MissingClosingBrace(var)
 
     if vars_[0] == "-":
-        return expand_default(var, vars_[1:], set_=False, nounset=nounset)
+        return expand_default(
+            var, vars_[1:], set_=False, nounset=nounset, indirect=indirect
+        )
 
     if vars_[0] == "=":
-        return expand_default(var, vars_[1:], set_=True, nounset=nounset)
+        return expand_default(
+            var, vars_[1:], set_=True, nounset=nounset, indirect=indirect
+        )
 
     if vars_[0] == "+":
         return expand_substitute(var, vars_[1:], nounset=nounset)
@@ -249,7 +271,7 @@ def expand_offset(var, vars_, nounset):
                 raise OperandExpected(var, offset_str)
             else:
                 offset = int(offset_str)
-            return getenv(var, nounset=nounset)[offset:] + expandvars(
+            return getenv(var, nounset=nounset, indirect=False)[offset:] + expandvars(
                 vars_[n:], nounset=nounset
             )
         buff.append(c)
@@ -280,9 +302,9 @@ def expand_length(var, vars_, offset, nounset):
             else:
                 width = offset + length
 
-            return getenv(var, nounset=nounset)[offset:width] + expandvars(
-                vars_[n:], nounset=nounset
-            )
+            return getenv(var, nounset=nounset, indirect=False)[
+                offset:width
+            ] + expandvars(vars_[n:], nounset=nounset)
 
         buff.append(c)
     raise MissingClosingBrace("".join(buff))
@@ -302,7 +324,7 @@ def expand_substitute(var, vars_, nounset):
     raise MissingClosingBrace("".join(sub))
 
 
-def expand_default(var, vars_, set_, nounset):
+def expand_default(var, vars_, set_, nounset, indirect):
     """Expand var or return default."""
 
     default = []
@@ -312,7 +334,10 @@ def expand_default(var, vars_, set_, nounset):
             default_ = "".join(default)
             if set_ and var not in environ:
                 environ.update({var: default_})
-            return environ.get(var, default_) + expandvars(vars_[n:], nounset=nounset)
+            return getenv(
+                var, nounset=nounset, indirect=indirect, default=default_
+            ) + expandvars(vars_[n:], nounset=nounset)
+
         default.append(c)
     raise MissingClosingBrace("".join(default))
 

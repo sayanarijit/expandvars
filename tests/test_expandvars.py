@@ -61,6 +61,7 @@ def test_expandvars_pid():
     assert expandvars.expandvars("$$") == str(getpid())
     assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
 
+
 @patch.dict(env, {})
 def test_expandvars_get_default():
     importlib.reload(expandvars)
@@ -126,6 +127,16 @@ def test_offset_length():
     assert expandvars.expandvars("${FOO::}") == ""
     assert expandvars.expandvars("${FOO::5}") == "damnb"
     assert expandvars.expandvars("${FOO:-3:1}:bar") == "damnbigfoobar:bar"
+
+
+@patch.dict(env, {"FOO": "X", "X": "foo"})
+def test_expandvars_indirection():
+    importlib.reload(expandvars)
+
+    assert expandvars.expandvars("${!FOO}:${FOO}") == "foo:X"
+    assert expandvars.expandvars("${!FOO-default}") == "foo"
+    assert expandvars.expandvars("${!BAR-default}") == "default"
+    assert expandvars.expandvars("${!X-default}") == "default"
 
 
 @patch.dict(env, {"FOO": "foo", "BAR": "bar"})
@@ -201,7 +212,7 @@ def test_invalid_length_err():
     importlib.reload(expandvars)
 
     with pytest.raises(
-        expandvars.ExpandvarsException, match="FOO: -3: substring expression < 0",
+        expandvars.ExpandvarsException, match="FOO: -3: substring expression < 0"
     ) as e:
         expandvars.expandvars("${FOO:1:-3}")
     assert isinstance(e.value, expandvars.NegativeSubStringExpression)
