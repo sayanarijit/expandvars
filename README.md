@@ -19,7 +19,7 @@ my_secret_access_code = "${ACCESS_CODE:-default_access_code}"
 my_important_variable = "${IMPORTANT_VARIABLE:?}"
 my_updated_path = "$PATH:$HOME/.bin"
 my_process_id = "$$"
-my_nested_variable = "${!NESTED}
+my_nested_variable = "${!NESTED}"
 ```
 
 > NOTE: Although this module copies most of the common behaviours of bash,
