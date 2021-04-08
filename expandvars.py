@@ -392,7 +392,7 @@ def expand_default(var, vars_, set_, nounset, indirect, environ, var_symbol):
     for c in vars_:
         if c == "}":
             n = len(default) + 1
-            default_ = "".join(default)
+            default_ = expand("".join(default))
             if set_ and var not in environ:
                 environ.update({var: default_})
             return getenv(

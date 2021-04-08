@@ -62,7 +62,7 @@ def test_expandvars_pid():
     assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
 
 
-@patch.dict(env, {})
+@patch.dict(env, {"ALTERNATE": "Alternate"})
 def test_expandvars_get_default():
     importlib.reload(expandvars)
 
@@ -70,6 +70,7 @@ def test_expandvars_get_default():
     assert expandvars.expandvars("${FOO:-default}") == "default"
     assert expandvars.expandvars("${FOO:-}") == ""
     assert expandvars.expandvars("${FOO:-foo}:${FOO-bar}") == "foo:bar"
+    assert expandvars.expandvars("${FOO:-$ALTERNATE}") == "Alternate"
 
 
 @patch.dict(env, {})
