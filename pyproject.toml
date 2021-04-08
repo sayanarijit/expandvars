@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "expandvars"
-version = "0.6.5"  # Also update expandvars.py
+version = "0.7.0"  # Also update expandvars.py
 description = "Expand system variables Unix style"
 license = "MIT"
 keywords = ["expand", "system", "variables"]
@@ -29,12 +29,12 @@ authors = ["Arijit Basu <sayanarijit@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "*"
+python = ">=3.4"
 
 [tool.poetry.dev-dependencies]
-tox = ">=3.7.0"
-pytest = {version = ">=4.6.1", optional = true}
-pytest-cov = {version = ">=2.7.1", optional = true}
+tox = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [tool.poetry.extras]
 testing = ["pytest", "pytest-cov"]
