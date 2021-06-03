@@ -102,3 +102,8 @@ poetry install
 - Keep it simple. Run `poetry run black` to auto format the code.
 - Test your changes locally by running `poetry run pytest` (pass `--cov --cov-report html` for browsable coverage report).
 - If you are familiar with [tox](https://tox.readthedocs.io), you may want to use it for testing in different python versions.
+
+Alternatives
+------------
+
+- [environs](https://github.com/sloria/environs) - simplified environment variable parsing.
