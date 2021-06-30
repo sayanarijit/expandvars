@@ -130,6 +130,33 @@ def test_offset_length():
     assert expandvars.expandvars("${FOO:-3:1}:bar") == "damnbigfoobar:bar"
 
 
+@patch.dict(env, {"THREE": "abc", "FOUR": "abcd", "SIX": "abcdef"})
+def test_length():
+    importlib.reload(expandvars)
+
+    assert expandvars.expandvars("${#THREE}") == "3"
+    assert expandvars.expandvars("${#THREE}${#FOUR}") == "34"
+    assert expandvars.expandvars("foo${#SIX}$SIX") == "foo6abcdef"
+
+
+@patch.dict(env, {"FOO": "abcabbcd", "BAR": "xabcabbcd", "ABC": "abc"})
+def test_pattern_substitution_startswith():
+    importlib.reload(expandvars)
+
+    assert expandvars.expandvars("${FOO#abc}") == "abbcd"
+    assert expandvars.expandvars("${FOO#a*c}") == "abbcd"
+    assert expandvars.expandvars("${FOO##a*c}") == "d"
+    assert expandvars.expandvars("${FOO#a?c}") == "abbcd"
+    assert expandvars.expandvars("${FOO##a?c}") == "abbcd"
+
+    assert expandvars.expandvars("${FOO#$ABC}") == "abbcd"
+    assert expandvars.expandvars("${FOO#${ABC}}") == "abbcd"
+
+    assert expandvars.expandvars("${BAR#abc}") == "xabcabbcd"
+    assert expandvars.expandvars("${BAR#a*c}") == "xabcabbcd"
+    assert expandvars.expandvars("${BAR##a*c}") == "xabcabbcd"
+
+
 @patch.dict(env, {"FOO": "X", "X": "foo"})
 def test_expandvars_indirection():
     importlib.reload(expandvars)
