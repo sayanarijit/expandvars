@@ -64,30 +64,35 @@ def test_expandvars_pid():
     assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
 
 
-@patch.dict(env, {"ALTERNATE": "Alternate"}, clear=True)
+@patch.dict(env, {"ALTERNATE": "Alternate", "EMPTY": ""}, clear=True)
 def test_expandvars_get_default():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO-default}") == "default"
     assert expandvars.expandvars("${FOO:-default}") == "default"
+    assert expandvars.expandvars("${EMPTY:-default}") == "default"
     assert expandvars.expandvars("${FOO:-}") == ""
     assert expandvars.expandvars("${FOO:-foo}:${FOO-bar}") == "foo:bar"
     assert expandvars.expandvars("${FOO:-$ALTERNATE}") == "Alternate"
 
 
-@patch.dict(env, {}, clear=True)
+@patch.dict(env, {"EMPTY": ""}, clear=True)
 def test_expandvars_update_default():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:=}") == ""
     assert expandvars.expandvars("${FOO=}") == ""
+    assert expandvars.expandvars("${EMPTY:=}") == ""
 
     del env["FOO"]
+    del env["EMPTY"]
 
     assert expandvars.expandvars("${FOO:=default}") == "default"
     assert expandvars.expandvars("${FOO=default}") == "default"
+    assert expandvars.expandvars("${EMPTY:=default}") == "default"
     assert env.get("FOO") == "default"
     assert expandvars.expandvars("${FOO:=ignoreme}") == "default"
+    assert expandvars.expandvars("${EMPTY:=ignoreme}") == "default"
     assert expandvars.expandvars("${FOO=ignoreme}:bar") == "default:bar"
 
 

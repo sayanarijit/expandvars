@@ -110,7 +110,7 @@ def getenv(var, nounset, indirect, environ, default=None):
     if val is not None and indirect:
         val = environ.get(val)
 
-    if val is not None:
+    if val:
         return val
 
     if default is not None:
@@ -400,7 +400,7 @@ def expand_default(var, vars_, set_, nounset, indirect, environ, var_symbol):
         if c == "}":
             n = len(default) + 1
             default_ = "".join(default)
-            if set_ and var not in environ:
+            if set_ and not environ.get(var):
                 environ.update({var: default_})
             return getenv(
                 var,
