@@ -381,7 +381,7 @@ def expand_substitute(var, vars_, nounset, environ, var_symbol):
     for c in vars_:
         if c == "}":
             n = len(sub) + 1
-            if var in environ:
+            if environ.get(var):
                 return "".join(sub) + expand(
                     vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
                 )

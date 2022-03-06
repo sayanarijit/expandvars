@@ -91,7 +91,7 @@ def test_expandvars_update_default():
     assert expandvars.expandvars("${FOO=ignoreme}:bar") == "default:bar"
 
 
-@patch.dict(env, {"FOO": "bar", "BUZ": "bar"}, clear=True)
+@patch.dict(env, {"FOO": "bar", "BUZ": "bar", "EMPTY": ""}, clear=True)
 def test_expandvars_substitute():
     importlib.reload(expandvars)
 
@@ -99,12 +99,14 @@ def test_expandvars_substitute():
     assert expandvars.expandvars("${FOO+foo}") == "foo"
     assert expandvars.expandvars("${BAR:+foo}") == ""
     assert expandvars.expandvars("${BAR+foo}") == ""
+    assert expandvars.expandvars("${EMPTY:+foo}") == ""
     assert expandvars.expandvars("${BAR:+}") == ""
     assert expandvars.expandvars("${BAR+}") == ""
     assert expandvars.expandvars("${BUZ:+foo}") == "foo"
     assert expandvars.expandvars("${BUZ+foo}:bar") == "foo:bar"
     assert expandvars.expandvars("${FOO:+${FOO};}") == "bar;"
     assert expandvars.expandvars("${BAR:+${BAR};}") == ""
+    assert expandvars.expandvars("${BAR:+${EMPTY};}") == ""
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
