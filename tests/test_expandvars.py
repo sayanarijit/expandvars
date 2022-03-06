@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-from os import environ as env, getpid
+from os import environ as env
+from os import getpid
 from unittest.mock import patch
 
-import expandvars
 import pytest
 
+import expandvars
 
-@patch.dict(env, {})
+
+@patch.dict(env, {}, clear=True)
 def test_expandvars_constant():
     importlib.reload(expandvars)
 
@@ -17,7 +19,7 @@ def test_expandvars_constant():
     assert expandvars.expandvars("BAR$") == "BAR$"
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_expandvars_empty():
     importlib.reload(expandvars)
 
@@ -25,7 +27,7 @@ def test_expandvars_empty():
     assert expandvars.expandvars("$FOO") == ""
 
 
-@patch.dict(env, {"FOO": "bar"})
+@patch.dict(env, {"FOO": "bar"}, clear=True)
 def test_expandvars_simple():
     importlib.reload(expandvars)
 
@@ -33,7 +35,7 @@ def test_expandvars_simple():
     assert expandvars.expandvars("${FOO}") == "bar"
 
 
-@patch.dict(env, {"FOO": "bar"})
+@patch.dict(env, {"FOO": "bar"}, clear=True)
 def test_expandvars_from_file():
     importlib.reload(expandvars)
 
@@ -41,7 +43,7 @@ def test_expandvars_from_file():
         assert expandvars.expandvars(f) == "bar:bar"
 
 
-@patch.dict(env, {"FOO": "bar", "BIZ": "buz"})
+@patch.dict(env, {"FOO": "bar", "BIZ": "buz"}, clear=True)
 def test_expandvars_combo():
     importlib.reload(expandvars)
 
@@ -54,7 +56,7 @@ def test_expandvars_combo():
     assert expandvars.expandvars("boo${BIZ}") == "boobuz"
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_expandvars_pid():
     importlib.reload(expandvars)
 
@@ -62,7 +64,7 @@ def test_expandvars_pid():
     assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
 
 
-@patch.dict(env, {"ALTERNATE": "Alternate"})
+@patch.dict(env, {"ALTERNATE": "Alternate"}, clear=True)
 def test_expandvars_get_default():
     importlib.reload(expandvars)
 
@@ -73,7 +75,7 @@ def test_expandvars_get_default():
     assert expandvars.expandvars("${FOO:-$ALTERNATE}") == "Alternate"
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_expandvars_update_default():
     importlib.reload(expandvars)
 
@@ -89,7 +91,7 @@ def test_expandvars_update_default():
     assert expandvars.expandvars("${FOO=ignoreme}:bar") == "default:bar"
 
 
-@patch.dict(env, {"FOO": "bar", "BUZ": "bar"})
+@patch.dict(env, {"FOO": "bar", "BUZ": "bar"}, clear=True)
 def test_expandvars_substitute():
     importlib.reload(expandvars)
 
@@ -101,9 +103,11 @@ def test_expandvars_substitute():
     assert expandvars.expandvars("${BAR+}") == ""
     assert expandvars.expandvars("${BUZ:+foo}") == "foo"
     assert expandvars.expandvars("${BUZ+foo}:bar") == "foo:bar"
+    assert expandvars.expandvars("${FOO:+${FOO};}") == "bar;"
+    assert expandvars.expandvars("${BAR:+${BAR};}") == ""
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_offset():
     importlib.reload(expandvars)
 
@@ -114,7 +118,7 @@ def test_offset():
     assert expandvars.expandvars("${FOO:-3}:bar") == "damnbigfoobar:bar"
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_offset_length():
     importlib.reload(expandvars)
 
@@ -130,7 +134,7 @@ def test_offset_length():
     assert expandvars.expandvars("${FOO:-3:1}:bar") == "damnbigfoobar:bar"
 
 
-@patch.dict(env, {"FOO": "X", "X": "foo"})
+@patch.dict(env, {"FOO": "X", "X": "foo"}, clear=True)
 def test_expandvars_indirection():
     importlib.reload(expandvars)
 
@@ -140,7 +144,7 @@ def test_expandvars_indirection():
     assert expandvars.expandvars("${!X-default}") == "default"
 
 
-@patch.dict(env, {"FOO": "foo", "BAR": "bar"})
+@patch.dict(env, {"FOO": "foo", "BAR": "bar"}, clear=True)
 def test_escape():
     importlib.reload(expandvars)
 
@@ -159,7 +163,7 @@ def test_escape():
     )
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_corner_cases():
     importlib.reload(expandvars)
 
@@ -167,7 +171,7 @@ def test_corner_cases():
     assert expandvars.expandvars("${FOO-{}}{}{}{}{{}}") == "{}{}{}{}{{}}"
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_strict_parsing():
     importlib.reload(expandvars)
 
@@ -197,7 +201,7 @@ def test_strict_parsing():
     assert expandvars.expandvars("${FOO?custom err}:bar") == "foo:bar"
 
 
-@patch.dict(env, {"FOO": "foo"})
+@patch.dict(env, {"FOO": "foo"}, clear=True)
 def test_missing_escapped_character():
     importlib.reload(expandvars)
 
@@ -208,7 +212,7 @@ def test_missing_escapped_character():
     assert isinstance(e.value, expandvars.MissingExcapedChar)
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_invalid_length_err():
     importlib.reload(expandvars)
 
@@ -219,7 +223,7 @@ def test_invalid_length_err():
     assert isinstance(e.value, expandvars.NegativeSubStringExpression)
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_bad_substitution_err():
     importlib.reload(expandvars)
 
@@ -234,7 +238,7 @@ def test_bad_substitution_err():
     assert isinstance(e.value, expandvars.BadSubstitution)
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_brace_never_closed_err():
     importlib.reload(expandvars)
 
@@ -274,7 +278,7 @@ def test_brace_never_closed_err():
     assert isinstance(e.value, expandvars.MissingClosingBrace)
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"})
+@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_invalid_operand_err():
     importlib.reload(expandvars)
 
@@ -305,6 +309,8 @@ def test_invalid_operand_err():
 
 @pytest.mark.parametrize("var_symbol", ["%", "&", "£", "="])
 def test_expand_var_symbol(var_symbol):
+    importlib.reload(expandvars)
+
     assert (
         expandvars.expand(
             var_symbol + "{FOO}", environ={"FOO": "test"}, var_symbol=var_symbol

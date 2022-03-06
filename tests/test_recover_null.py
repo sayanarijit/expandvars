@@ -7,7 +7,7 @@ from unittest.mock import patch
 import expandvars
 
 
-@patch.dict(env, {"EXPANDVARS_RECOVER_NULL": "foo", "BAR": "bar"})
+@patch.dict(env, {"EXPANDVARS_RECOVER_NULL": "foo", "BAR": "bar"}, clear=True)
 def test_strict_parsing_recover_null():
     importlib.reload(expandvars)
 

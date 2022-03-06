@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 from os import environ as env
 from unittest.mock import patch
 
-import importlib
-import expandvars
 import pytest
 
+import expandvars
 
-@patch.dict(env, {})
+
+@patch.dict(env, {}, clear=True)
 def test_expandvars_option_nounset():
     importlib.reload(expandvars)
 
@@ -29,7 +30,7 @@ def test_expandvars_option_nounset():
     assert isinstance(e.value, expandvars.UnboundVariable)
 
 
-@patch.dict(env, {})
+@patch.dict(env, {}, clear=True)
 def test_expandvars_option_nounset_with_strict():
     importlib.reload(expandvars)
 
