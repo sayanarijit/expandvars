@@ -1,43 +1,49 @@
-[tool]
 [tool.poetry]
-name = "expandvars"
-version = "0.7.0"  # Also update expandvars.py
-description = "Expand system variables Unix style"
-license = "MIT"
-keywords = ["expand", "system", "variables"]
-classifiers = [
-	"Development Status :: 4 - Beta",
-	"Intended Audience :: Developers",
-	"Intended Audience :: Information Technology",
-	"Intended Audience :: Other Audience",
-	"License :: OSI Approved :: MIT License",
-	"Natural Language :: English",
-	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.5",
-	"Programming Language :: Python :: 3.6",
-	"Programming Language :: Python :: 3.7",
-	"Programming Language :: Python :: 3.8",
-	"Topic :: Utilities",
-	"Topic :: Software Development",
-	"Operating System :: MacOS",
-	"Operating System :: Unix",
-	"Operating System :: POSIX",
-	"Operating System :: Microsoft"
+name = 'expandvars'
+version = '0.8.0'
+description = 'Expand system variables Unix style'
+license = 'MIT'
+keywords = [
+    'expand',
+    'system',
+    'variables',
 ]
-homepage = "https://github.com/sayanarijit/expandvars"
-authors = ["Arijit Basu <sayanarijit@gmail.com>"]
-readme = "README.md"
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: Other Audience',
+    'License :: OSI Approved :: MIT License',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Topic :: Utilities',
+    'Topic :: Software Development',
+    'Operating System :: MacOS',
+    'Operating System :: Unix',
+    'Operating System :: POSIX',
+    'Operating System :: Microsoft',
+]
+homepage = 'https://github.com/sayanarijit/expandvars'
+authors = ['Arijit Basu <sayanarijit@gmail.com>']
+readme = 'README.md'
 
 [tool.poetry.dependencies]
-python = ">=3.4"
+python = '>=3.4'
 
 [tool.poetry.dev-dependencies]
-tox = "*"
-pytest = "*"
-pytest-cov = "*"
+tox = '*'
+pytest = '*'
+pytest-cov = '*'
 
 [tool.poetry.extras]
-testing = ["pytest", "pytest-cov"]
+testing = [
+    'pytest',
+    'pytest-cov',
+]
 
 [tool.pytest]
-addopts = "--cov --cov-report=html --cov-fail-under=100"
+addopts = '--cov --cov-report=html --cov-fail-under=100'

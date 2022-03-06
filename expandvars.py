@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os
-
 from io import TextIOWrapper
 
 __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.7.0"  # Also update pyproject.toml
+__version__ = "v0.8.0"  # Also update pyproject.toml
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -235,7 +234,7 @@ def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
     if vars_[0] == "-":
         return expand_default(
             var,
-            vars_[1:],
+            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
             set_=False,
             nounset=nounset,
             indirect=indirect,
@@ -246,7 +245,7 @@ def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
     if vars_[0] == "=":
         return expand_default(
             var,
-            vars_[1:],
+            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
             set_=True,
             nounset=nounset,
             indirect=indirect,
@@ -256,12 +255,20 @@ def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
 
     if vars_[0] == "+":
         return expand_substitute(
-            var, vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            var,
+            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
+            nounset=nounset,
+            environ=environ,
+            var_symbol=var_symbol,
         )
 
     if vars_[0] == "?":
         return expand_strict(
-            var, vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol
+            var,
+            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
+            nounset=nounset,
+            environ=environ,
+            var_symbol=var_symbol,
         )
 
     return expand_offset(
@@ -392,7 +399,7 @@ def expand_default(var, vars_, set_, nounset, indirect, environ, var_symbol):
     for c in vars_:
         if c == "}":
             n = len(default) + 1
-            default_ = expand("".join(default))
+            default_ = "".join(default)
             if set_ and var not in environ:
                 environ.update({var: default_})
             return getenv(
