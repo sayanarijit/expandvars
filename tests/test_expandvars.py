@@ -74,6 +74,7 @@ def test_expandvars_get_default():
     assert expandvars.expandvars("${FOO:-}") == ""
     assert expandvars.expandvars("${FOO:-foo}:${FOO-bar}") == "foo:bar"
     assert expandvars.expandvars("${FOO:-$ALTERNATE}") == "Alternate"
+    assert expandvars.expandvars("${UNSET:-\\$foo}-\\$foo") == "$foo-$foo"
 
 
 @patch.dict(env, {"EMPTY": ""}, clear=True)
@@ -112,6 +113,7 @@ def test_expandvars_substitute():
     assert expandvars.expandvars("${FOO:+${FOO};}") == "bar;"
     assert expandvars.expandvars("${BAR:+${BAR};}") == ""
     assert expandvars.expandvars("${BAR:+${EMPTY};}") == ""
+    assert expandvars.expandvars("${FOO:+\\$foo}-\\$foo") == "$foo-$foo"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
@@ -284,21 +286,20 @@ def test_brace_never_closed_err():
     assert str(e.value) == "${FOO-: missing '}'"
     assert isinstance(e.value, expandvars.MissingClosingBrace)
 
+    with pytest.raises(expandvars.ExpandvarsException) as e:
+        expandvars.expandvars("${FOO-{{}")
+    assert str(e.value) == "${FOO-{{}: missing '}'"
+    assert isinstance(e.value, expandvars.MissingClosingBrace)
+
+
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_invalid_operand_err():
     importlib.reload(expandvars)
 
-    oprnds = "@#$%^&*()_'\"\\"
+    oprnds = "@#$%^&*()_'\""
 
     for o in oprnds:
-        with pytest.raises(expandvars.ExpandvarsException) as e:
-            expandvars.expandvars("${{FOO:{0}}}".format(o))
-        assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
-            repr(o)
-        )
-        assert isinstance(e.value, expandvars.OperandExpected)
-
         with pytest.raises(expandvars.ExpandvarsException) as e:
             expandvars.expandvars("${{FOO:0:{0}}}".format(o))
         assert str(e.value) == ("FOO: operand expected (error token is {0})").format(

@@ -7,7 +7,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v0.8.0"  # Also update pyproject.toml
+__version__ = "v0.9.0"  # Also update pyproject.toml
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -231,79 +231,91 @@ def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
     if len(vars_) == 0:
         raise MissingClosingBrace(var)
 
-    if vars_[0] == "-":
+    modifier = []
+    depth = 1
+    for c in vars_:
+        if c == "{":
+            depth += 1
+            modifier.append(c)
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                break
+            else:
+                modifier.append(c)
+        else:
+            modifier.append(c)
+
+    if depth != 0:
+        raise MissingClosingBrace(var)
+
+    vars_ = vars_[len(modifier) + 1 :]
+    modifier = expand(
+        "".join(modifier), nounset=nounset, environ=environ, var_symbol=var_symbol
+    )
+
+    if not modifier:
+        raise BadSubstitution(var)
+
+    if modifier[0] == "-":
         return expand_default(
             var,
-            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
+            modifier=modifier[1:],
             set_=False,
             nounset=nounset,
             indirect=indirect,
             environ=environ,
-            var_symbol=var_symbol,
-        )
+        ) + expand(vars_, nounset=nounset, environ=environ, var_symbol=var_symbol)
 
-    if vars_[0] == "=":
+    if modifier[0] == "=":
         return expand_default(
             var,
-            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
+            modifier=modifier[1:],
             set_=True,
             nounset=nounset,
             indirect=indirect,
             environ=environ,
-            var_symbol=var_symbol,
-        )
+        ) + expand(vars_, nounset=nounset, environ=environ, var_symbol=var_symbol)
 
-    if vars_[0] == "+":
+    if modifier[0] == "+":
         return expand_substitute(
             var,
-            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
-            nounset=nounset,
+            modifier=modifier[1:],
             environ=environ,
-            var_symbol=var_symbol,
-        )
+        ) + expand(vars_, nounset=nounset, environ=environ, var_symbol=var_symbol)
 
-    if vars_[0] == "?":
+    if modifier[0] == "?":
         return expand_strict(
             var,
-            expand(vars_[1:], nounset=nounset, environ=environ, var_symbol=var_symbol),
-            nounset=nounset,
+            modifier=modifier[1:],
             environ=environ,
-            var_symbol=var_symbol,
-        )
+        ) + expand(vars_, nounset=nounset, environ=environ, var_symbol=var_symbol)
 
     return expand_offset(
-        var, vars_, nounset=nounset, environ=environ, var_symbol=var_symbol
-    )
+        var,
+        modifier=modifier,
+        nounset=nounset,
+        environ=environ,
+    ) + expand(vars_, nounset=nounset, environ=environ, var_symbol=var_symbol)
 
 
-def expand_strict(var, vars_, nounset, environ, var_symbol):
+def expand_strict(var, modifier, environ):
     """Expand variable that must be defined."""
 
-    buff = []
-    for c in vars_:
-        if c == "}":
-            n = len(buff) + 1
-            val = environ.get(var, "")
-            if val:
-                return val + expand(
-                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-                )
-            if RECOVER_NULL is not None:
-                return RECOVER_NULL + expand(
-                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-                )
-            raise ParameterNullOrNotSet(var, "".join(buff) if buff else None)
-
-        buff.append(c)
-
-    raise MissingClosingBrace("".join(buff))
+    n = len(modifier) + 1
+    val = environ.get(var, "")
+    if val:
+        return val
+    if RECOVER_NULL is not None:
+        return RECOVER_NULL
+    raise ParameterNullOrNotSet(var, modifier if modifier else None)
 
 
-def expand_offset(var, vars_, nounset, environ, var_symbol):
+def expand_offset(var, modifier, nounset, environ):
     """Expand variable with offset."""
 
     buff = []
-    for c in vars_:
+    for c in modifier:
         if c == ":":
             n = len(buff) + 1
             offset_str = "".join(buff)
@@ -313,107 +325,74 @@ def expand_offset(var, vars_, nounset, environ, var_symbol):
                 raise OperandExpected(var, offset_str)
             else:
                 offset = int(offset_str)
+
             return expand_length(
                 var,
-                vars_[n:],
-                offset,
+                modifier=modifier[n:],
+                offset=offset,
                 nounset=nounset,
                 environ=environ,
-                var_symbol=var_symbol,
             )
 
-        if c == "}":
-            n = len(buff) + 1
-            offset_str = "".join(buff).strip()
-            if not offset_str:
-                raise BadSubstitution(var)
-            elif not _isint(offset_str):
-                raise OperandExpected(var, offset_str)
-            else:
-                offset = int(offset_str)
-            return getenv(var, nounset=nounset, indirect=False, environ=environ)[
-                offset:
-            ] + expand(
-                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-            )
         buff.append(c)
-    raise MissingClosingBrace("".join(buff))
+
+    n = len(buff) + 1
+    offset_str = "".join(buff).strip()
+    if not offset_str:
+        raise BadSubstitution(var)
+    elif not _isint(offset_str):
+        raise OperandExpected(var, offset_str)
+    else:
+        offset = int(offset_str)
+    return getenv(var, nounset=nounset, indirect=False, environ=environ)[offset:]
 
 
-def expand_length(var, vars_, offset, nounset, environ, var_symbol):
+def expand_length(var, modifier, offset, nounset, environ):
     """Expand variable with offset and length."""
 
-    buff = []
-    for c in vars_:
-        if c == "}":
-            n = len(buff) + 1
-            length_str = "".join(buff).strip()
-            if not length_str:
-                length = None
-            elif not _isint(length_str):
-                raise OperandExpected(var, length_str)
-            else:
-                length = int(length_str)
-                if length < 0:
-                    raise NegativeSubStringExpression(var, length_str)
+    n = len(modifier) + 1
+    length_str = modifier.strip()
+    if not length_str:
+        length = None
+    elif not _isint(length_str):
+        raise OperandExpected(var, length_str)
+    else:
+        length = int(length_str)
+        if length < 0:
+            raise NegativeSubStringExpression(var, length_str)
 
-            if length is None:
-                width = 0
-            elif offset is None:
-                width = length
-            else:
-                width = offset + length
+    if length is None:
+        width = 0
+    elif offset is None:
+        width = length
+    else:
+        width = offset + length
 
-            return getenv(var, nounset=nounset, indirect=False, environ=environ)[
-                offset:width
-            ] + expand(
-                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-            )
-
-        buff.append(c)
-    raise MissingClosingBrace("".join(buff))
+    return getenv(var, nounset=nounset, indirect=False, environ=environ)[offset:width]
 
 
-def expand_substitute(var, vars_, nounset, environ, var_symbol):
+def expand_substitute(var, modifier, environ):
     """Expand or return substitute."""
 
-    sub = []
-    for c in vars_:
-        if c == "}":
-            n = len(sub) + 1
-            if environ.get(var):
-                return "".join(sub) + expand(
-                    vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-                )
-            return expand(
-                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-            )
-        sub.append(c)
-    raise MissingClosingBrace("".join(sub))
+    n = len(modifier) + 1
+    if environ.get(var):
+        return modifier
+    return ""
 
 
-def expand_default(var, vars_, set_, nounset, indirect, environ, var_symbol):
+def expand_default(var, modifier, set_, nounset, indirect, environ):
     """Expand var or return default."""
 
-    default = []
-    for c in vars_:
-        if c == "}":
-            n = len(default) + 1
-            default_ = "".join(default)
-            if set_ and not environ.get(var):
-                environ.update({var: default_})
-            return getenv(
-                var,
-                nounset=nounset,
-                indirect=indirect,
-                default=default_,
-                environ=environ,
-            ) + expand(
-                vars_[n:], nounset=nounset, environ=environ, var_symbol=var_symbol
-            )
-
-        default.append(c)
-    raise MissingClosingBrace("".join(default))
+    n = len(modifier) + 1
+    if set_ and not environ.get(var):
+        environ.update({var: modifier})
+    return getenv(
+        var,
+        nounset=nounset,
+        indirect=indirect,
+        default=modifier,
+        environ=environ,
+    )
 
 
 def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
