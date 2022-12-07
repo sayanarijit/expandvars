@@ -26,6 +26,19 @@ my_nested_variable = "${!NESTED}"
 > it doesn't follow bash strictly. For example, it doesn't work with arrays.
 
 
+Installation
+------------
+
+### Pip
+```
+pip install expandvars
+```
+
+### Conda
+```
+conda install -c conda-forge expandvars
+```
+
 Usage
 -----
 
