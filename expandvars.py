@@ -18,6 +18,7 @@ __all__ = [
     "OperandExpected",
     "ParameterNullOrNotSet",
     "UnboundVariable",
+    "expand",
     "expandvars",
 ]
 
