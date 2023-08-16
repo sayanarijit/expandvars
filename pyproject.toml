@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'expandvars'
-version = '0.10.0'
+version = '0.11.0'
 description = 'Expand system variables Unix style'
 license = 'MIT'
 keywords = [
@@ -39,6 +39,7 @@ pytest-cov = '*'
 testing = [
     'pytest',
     'pytest-cov',
+    'toml',
 ]
 
 [tool.pytest]
