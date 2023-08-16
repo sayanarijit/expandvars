@@ -124,7 +124,13 @@ def test_offset():
     assert expandvars.expandvars("${FOO: 4 }") == "bigfoobar"
     assert expandvars.expandvars("${FOO:30}") == ""
     assert expandvars.expandvars("${FOO:0}") == "damnbigfoobar"
+    assert expandvars.expandvars("${FOO: }") == "damnbigfoobar"
+    assert expandvars.expandvars("${FOO: : }") == ""
     assert expandvars.expandvars("${FOO:-3}:bar") == "damnbigfoobar:bar"
+    assert expandvars.expandvars("${FOO::}") == ""
+    assert expandvars.expandvars("${FOO::aaa}") == ""
+    assert expandvars.expandvars("${FOO: :2}") == "da"
+    assert expandvars.expandvars("${FOO:aaa:2}") == "da"
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
@@ -237,12 +243,12 @@ def test_bad_substitution_err():
     importlib.reload(expandvars)
 
     with pytest.raises(expandvars.ExpandvarsException) as e:
-        expandvars.expandvars("${FOO:}") == ""
+        expandvars.expandvars("${FOO:}")
     assert str(e.value) == "${FOO:}: bad substitution"
     assert isinstance(e.value, expandvars.BadSubstitution)
 
     with pytest.raises(expandvars.ExpandvarsException) as e:
-        expandvars.expandvars("${}") == ""
+        expandvars.expandvars("${}")
     assert str(e.value) == "${}: bad substitution"
     assert isinstance(e.value, expandvars.BadSubstitution)
 
@@ -292,15 +298,15 @@ def test_brace_never_closed_err():
     assert isinstance(e.value, expandvars.MissingClosingBrace)
 
 
-
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
 def test_invalid_operand_err():
     importlib.reload(expandvars)
 
-    oprnds = "@#$%^&*()_'\""
+    oprnds = "@#$%^&*()'\""
 
     for o in oprnds:
         with pytest.raises(expandvars.ExpandvarsException) as e:
+            print(o)
             expandvars.expandvars("${{FOO:0:{0}}}".format(o))
         assert str(e.value) == ("FOO: operand expected (error token is {0})").format(
             repr(o)
