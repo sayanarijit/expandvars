@@ -303,7 +303,6 @@ def expand_advanced(var, vars_, nounset, indirect, environ, var_symbol):
 def expand_strict(var, modifier, environ):
     """Expand variable that must be defined."""
 
-    n = len(modifier) + 1
     val = environ.get(var, "")
     if val:
         return val
@@ -320,10 +319,8 @@ def expand_offset(var, modifier, nounset, environ):
         if c == ":":
             n = len(buff) + 1
             offset_str = "".join(buff)
-            if not offset_str:
-                offset = None
-            elif not _isint(offset_str):
-                raise OperandExpected(var, offset_str)
+            if not offset_str or not _isint(offset_str):
+                offset = 0
             else:
                 offset = int(offset_str)
 
@@ -339,10 +336,8 @@ def expand_offset(var, modifier, nounset, environ):
 
     n = len(buff) + 1
     offset_str = "".join(buff).strip()
-    if not offset_str:
-        raise BadSubstitution(var)
-    elif not _isint(offset_str):
-        raise OperandExpected(var, offset_str)
+    if not offset_str or not _isint(offset_str):
+        offset = 0
     else:
         offset = int(offset_str)
     return getenv(var, nounset=nounset, indirect=False, environ=environ)[offset:]
@@ -351,12 +346,14 @@ def expand_offset(var, modifier, nounset, environ):
 def expand_length(var, modifier, offset, nounset, environ):
     """Expand variable with offset and length."""
 
-    n = len(modifier) + 1
     length_str = modifier.strip()
     if not length_str:
         length = None
     elif not _isint(length_str):
-        raise OperandExpected(var, length_str)
+        if not all(_valid_char(c) for c in length_str):
+            raise OperandExpected(var, length_str)
+        else:
+            length = None
     else:
         length = int(length_str)
         if length < 0:
@@ -364,8 +361,6 @@ def expand_length(var, modifier, offset, nounset, environ):
 
     if length is None:
         width = 0
-    elif offset is None:
-        width = length
     else:
         width = offset + length
 
@@ -375,7 +370,6 @@ def expand_length(var, modifier, offset, nounset, environ):
 def expand_substitute(var, modifier, environ):
     """Expand or return substitute."""
 
-    n = len(modifier) + 1
     if environ.get(var):
         return modifier
     return ""
@@ -384,7 +378,6 @@ def expand_substitute(var, modifier, environ):
 def expand_default(var, modifier, set_, nounset, indirect, environ):
     """Expand var or return default."""
 
-    n = len(modifier) + 1
     if set_ and not environ.get(var):
         environ.update({var: modifier})
     return getenv(
