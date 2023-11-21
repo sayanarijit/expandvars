@@ -10,6 +10,7 @@ import pytest
 import expandvars
 
 
+#
 @patch.dict(env, {}, clear=True)
 def test_expandvars_constant():
     importlib.reload(expandvars)
@@ -40,7 +41,7 @@ def test_expandvars_from_file():
     importlib.reload(expandvars)
 
     with open("tests/data/foo.txt") as f:
-        assert expandvars.expandvars(f) == "bar:bar"
+        assert expandvars.expandvars(f) == "bar:bar\n"
 
 
 @patch.dict(env, {"FOO": "bar", "BIZ": "buz"}, clear=True)
@@ -61,7 +62,7 @@ def test_expandvars_pid():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("$$") == str(getpid())
-    assert expandvars.expandvars("PID( $$ )") == "PID( {0} )".format(getpid())
+    assert expandvars.expandvars("PID( ${$} )") == "PID( {0} )".format(getpid())
 
 
 @patch.dict(env, {"ALTERNATE": "Alternate", "EMPTY": ""}, clear=True)
@@ -82,6 +83,7 @@ def test_expandvars_update_default():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:=}") == ""
+
     assert expandvars.expandvars("${FOO=}") == ""
     assert expandvars.expandvars("${EMPTY:=}") == ""
 
@@ -116,27 +118,33 @@ def test_expandvars_substitute():
     assert expandvars.expandvars("${FOO:+\\$foo}-\\$foo") == "$foo-$foo"
 
 
-@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
+@patch.dict(env, {"FOO": "damnbigfoobar", "THREE": "3"}, clear=True)
 def test_offset():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${FOO:3}") == "nbigfoobar"
+    assert expandvars.expandvars("${FOO:$THREE}") == "nbigfoobar"
+    assert expandvars.expandvars("${FOO:${THREE}}") == "nbigfoobar"
     assert expandvars.expandvars("${FOO: 4 }") == "bigfoobar"
     assert expandvars.expandvars("${FOO:30}") == ""
     assert expandvars.expandvars("${FOO:0}") == "damnbigfoobar"
     assert expandvars.expandvars("${FOO: }") == "damnbigfoobar"
+
+
+@patch.dict(env, {"FOO": "damnbigfoobar", "TWO": "2"}, clear=True)
+def test_offset_length():
+    importlib.reload(expandvars)
+
     assert expandvars.expandvars("${FOO: : }") == ""
     assert expandvars.expandvars("${FOO:-3}:bar") == "damnbigfoobar:bar"
     assert expandvars.expandvars("${FOO::}") == ""
     assert expandvars.expandvars("${FOO::aaa}") == ""
     assert expandvars.expandvars("${FOO: :2}") == "da"
+    assert expandvars.expandvars("${FOO: :$TWO}") == "da"
+    assert expandvars.expandvars("${FOO: :${TWO}}") == "da"
     assert expandvars.expandvars("${FOO:aaa:2}") == "da"
-
-
-@patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
-def test_offset_length():
-    importlib.reload(expandvars)
-
+    assert expandvars.expandvars("${FOO:aaa:$TWO}") == "da"
+    assert expandvars.expandvars("${FOO:aaa:${TWO}}") == "da"
     assert expandvars.expandvars("${FOO:4:3}") == "big"
     assert expandvars.expandvars("${FOO: 7:6 }") == "foobar"
     assert expandvars.expandvars("${FOO:7: 100 }") == "foobar"
@@ -149,14 +157,23 @@ def test_offset_length():
     assert expandvars.expandvars("${FOO:-3:1}:bar") == "damnbigfoobar:bar"
 
 
+#
 @patch.dict(env, {"FOO": "X", "X": "foo"}, clear=True)
 def test_expandvars_indirection():
     importlib.reload(expandvars)
 
     assert expandvars.expandvars("${!FOO}:${FOO}") == "foo:X"
     assert expandvars.expandvars("${!FOO-default}") == "foo"
-    assert expandvars.expandvars("${!BAR-default}") == "default"
     assert expandvars.expandvars("${!X-default}") == "default"
+
+
+@patch.dict(env, {"THREE": "abc", "FOUR": "abcd", "SIX": "abcdef"})
+def test_length():
+    importlib.reload(expandvars)
+
+    assert expandvars.expandvars("${#THREE}") == "3"
+    assert expandvars.expandvars("${#THREE}${#FOUR}") == "34"
+    assert expandvars.expandvars("foo${#SIX}$SIX") == "foo6abcdef"
 
 
 @patch.dict(env, {"FOO": "foo", "BAR": "bar"}, clear=True)
@@ -173,11 +190,12 @@ def test_escape():
     assert expandvars.expandvars("$\\$FOO") == "$$FOO"
     assert expandvars.expandvars("\\$FOO") == "$FOO"
     assert (
-        expandvars.expandvars("D:\\\\some\\windows\\path")
+        expandvars.expandvars("D:\\\\\\some\\windows\\path")
         == "D:\\\\some\\windows\\path"
     )
 
 
+#
 @patch.dict(env, {}, clear=True)
 def test_corner_cases():
     importlib.reload(expandvars)
@@ -224,7 +242,7 @@ def test_missing_escapped_character():
         expandvars.expandvars("$FOO\\")
 
     assert str(e.value) == "$FOO\\: missing escaped character"
-    assert isinstance(e.value, expandvars.MissingExcapedChar)
+    assert isinstance(e.value, expandvars.MissingEscapedChar)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
@@ -251,6 +269,33 @@ def test_bad_substitution_err():
         expandvars.expandvars("${}")
     assert str(e.value) == "${}: bad substitution"
     assert isinstance(e.value, expandvars.BadSubstitution)
+
+    with pytest.raises(expandvars.ExpandvarsException) as e:
+        expandvars.expandvars("${FOO:1:2:3}")
+    assert str(e.value) == "${FOO:1:2:3}: bad substitution"
+    assert isinstance(e.value, expandvars.BadSubstitution)
+
+    with pytest.raises(expandvars.ExpandvarsException) as e:
+        expandvars.expandvars("${#FOO:-default}")
+    assert str(e.value) == "${#FOO:-default}: bad substitution"
+    assert isinstance(e.value, expandvars.BadSubstitution)
+
+    with pytest.raises(expandvars.ExpandvarsException) as e:
+        expandvars.expandvars("${#FOO:1}")
+    assert str(e.value) == "${#FOO:1}: bad substitution"
+    assert isinstance(e.value, expandvars.BadSubstitution)
+
+
+@patch.dict(env, {}, clear=True)
+def test_invalid_indirect_expansion():
+    importlib.reload(expandvars)
+
+    with pytest.raises(
+        expandvars.ExpandvarsException, match="FOO: invalid indirect expansion"
+    ) as e:
+        expandvars.expandvars("${!FOO}")
+
+    assert isinstance(e.value, expandvars.InvalidIndirectExpansion)
 
 
 @patch.dict(env, {"FOO": "damnbigfoobar"}, clear=True)
