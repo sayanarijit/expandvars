@@ -12,7 +12,7 @@ import expandvars
 def test_version():
     import toml
     pyproject = toml.load("pyproject.toml")
-    poetry_version = pyproject["tool"]["poetry"]["version"]
+    poetry_version = pyproject["project"]["version"]
     assert expandvars.__version__ == f"v{poetry_version}"
 
 

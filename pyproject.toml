@@ -1,8 +1,7 @@
-[tool.poetry]
+[project]
 name = 'expandvars'
-version = '0.11.0'
+version = '0.12.0'
 description = 'Expand system variables Unix style'
-license = 'MIT'
 keywords = [
     'expand',
     'system',
@@ -24,23 +23,25 @@ classifiers = [
     'Operating System :: Microsoft',
 ]
 homepage = 'https://github.com/sayanarijit/expandvars'
-authors = ['Arijit Basu <sayanarijit@gmail.com>']
-readme = 'README.md'
-
-[tool.poetry.dependencies]
-python = '>=3.6'
-
-[tool.poetry.dev-dependencies]
-tox = '*'
-pytest = '*'
-pytest-cov = '*'
-
-[tool.poetry.extras]
-testing = [
-    'pytest',
-    'pytest-cov',
-    'toml',
+authors = [
+  {name = "Arijit Basu", email = "sayanarijit@gmail.com"}
 ]
+maintainers = [
+  {name = "Arijit Basu", email = "sayanarijit@gmail.com"}
+]
+readme = 'README.md'
+license = {file = "LICENSE"}
+requires-python = ">=3"
+
+[project.urls]
+"Homepage" = "https://github.com/sayanarijit/expandvars"
+
+[project.optional-dependencies]
+tests = ['tox', 'pytest', 'pytest-cov', 'toml']
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest]
 addopts = '--cov --cov-report=html --cov-fail-under=100'
