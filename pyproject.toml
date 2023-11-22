@@ -1,6 +1,6 @@
 [project]
+dynamic = ["version"]
 name = 'expandvars'
-version = '0.12.0'
 description = 'Expand system variables Unix style'
 keywords = [
     'expand',
@@ -37,11 +37,14 @@ requires-python = ">=3"
 "Homepage" = "https://github.com/sayanarijit/expandvars"
 
 [project.optional-dependencies]
-tests = ['tox', 'pytest', 'pytest-cov', 'toml']
+tests = ['tox', 'pytest', 'pytest-cov', 'black']
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "expandvars.py"
 
 [tool.pytest]
 addopts = '--cov --cov-report=html --cov-fail-under=100'
