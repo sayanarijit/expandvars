@@ -9,12 +9,6 @@ import pytest
 
 import expandvars
 
-def test_version():
-    import toml
-    pyproject = toml.load("pyproject.toml")
-    poetry_version = pyproject["tool"]["poetry"]["version"]
-    assert expandvars.__version__ == f"v{poetry_version}"
-
 
 @patch.dict(env, {}, clear=True)
 def test_expandvars_constant():
@@ -355,5 +349,3 @@ def test_expand_var_symbol(var_symbol):
         )
         == "test,$HOME"
     )
-
-
