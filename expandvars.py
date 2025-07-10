@@ -102,7 +102,14 @@ def getenv(var, indirect, environ, var_symbol="$"):
     return val
 
 
-def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
+def expand(
+    vars_,
+    nounset=False,
+    environ=os.environ,
+    var_symbol="$",
+    var_symbol_require_suffix=False,
+    disable_escape=False,
+):
     """Expand variables Unix style.
 
     Params:
@@ -137,7 +144,7 @@ def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
     vars_iter = _PeekableIterator(vars_)
     try:
         for c in vars_iter:
-            if c == ESCAPE_CHAR:
+            if not disable_escape and c == ESCAPE_CHAR:
                 next_ = vars_iter.peek()
                 if next_ == var_symbol or next_ == ESCAPE_CHAR:
                     buff.append(next(vars_iter))
@@ -149,6 +156,8 @@ def expand(vars_, nounset=False, environ=os.environ, var_symbol="$"):
             elif c == var_symbol:
                 next_ = vars_iter.peek()
                 if next_ == _PeekableIterator.NOTHING:
+                    buff.append(c)
+                elif var_symbol_require_suffix and next_ != "{":
                     buff.append(c)
                 elif _valid_char(next_) or next_ == "{" or next_ == var_symbol:
                     val = _expand_var(
