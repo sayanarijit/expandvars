@@ -394,3 +394,26 @@ def test_expand_var_symbol(var_symbol):
         )
         == "test,$HOME"
     )
+
+
+@patch.dict(env, {"FOO": "bar", "BIZ": "buz"}, clear=True)
+def test_expandvars_require_suffix():
+    importlib.reload(expandvars)
+
+    assert expandvars.expand("${FOO}:$BIZ", surrounded_vars_only=True) == "bar:$BIZ"
+    assert expandvars.expand("$FOO$BIZ", surrounded_vars_only=True) == "$FOO$BIZ"
+    assert expandvars.expand("${FOO}$BIZ", surrounded_vars_only=True) == "bar$BIZ"
+    assert expandvars.expand("$FOO${BIZ}", surrounded_vars_only=True) == "$FOObuz"
+    assert expandvars.expand("$FOO-$BIZ", surrounded_vars_only=True) == "$FOO-$BIZ"
+    assert expandvars.expand("boo$BIZ", surrounded_vars_only=True) == "boo$BIZ"
+    assert expandvars.expand("boo${BIZ}", surrounded_vars_only=True) == "boobuz"
+
+
+@patch.dict(env, {"FOO": "bar", "BIZ": "buz"}, clear=True)
+def test_expandvars_disable_escape():
+    importlib.reload(expandvars)
+
+    assert (
+        expandvars.expand("\\foo\\", surrounded_vars_only=True, escape_char=None)
+        == "\\foo\\"
+    )
