@@ -107,8 +107,8 @@ def expand(
     nounset=False,
     environ=os.environ,
     var_symbol="$",
-    var_symbol_require_suffix=False,
-    disable_escape=False,
+    surrounded_vars_only=False,
+    escape_char=ESCAPE_CHAR,
 ):
     """Expand variables Unix style.
 
@@ -144,9 +144,9 @@ def expand(
     vars_iter = _PeekableIterator(vars_)
     try:
         for c in vars_iter:
-            if not disable_escape and c == ESCAPE_CHAR:
+            if escape_char and c == escape_char:
                 next_ = vars_iter.peek()
-                if next_ == var_symbol or next_ == ESCAPE_CHAR:
+                if next_ == var_symbol or next_ == escape_char:
                     buff.append(next(vars_iter))
                 elif next_ == _PeekableIterator.NOTHING:
                     raise MissingEscapedChar(c)
@@ -157,7 +157,7 @@ def expand(
                 next_ = vars_iter.peek()
                 if next_ == _PeekableIterator.NOTHING:
                     buff.append(c)
-                elif var_symbol_require_suffix and next_ != "{":
+                elif surrounded_vars_only and next_ != "{":
                     buff.append(c)
                 elif _valid_char(next_) or next_ == "{" or next_ == var_symbol:
                     val = _expand_var(

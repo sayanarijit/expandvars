@@ -400,15 +400,13 @@ def test_expand_var_symbol(var_symbol):
 def test_expandvars_require_suffix():
     importlib.reload(expandvars)
 
-    assert (
-        expandvars.expand("${FOO}:$BIZ", var_symbol_require_suffix=True) == "bar:$BIZ"
-    )
-    assert expandvars.expand("$FOO$BIZ", var_symbol_require_suffix=True) == "$FOO$BIZ"
-    assert expandvars.expand("${FOO}$BIZ", var_symbol_require_suffix=True) == "bar$BIZ"
-    assert expandvars.expand("$FOO${BIZ}", var_symbol_require_suffix=True) == "$FOObuz"
-    assert expandvars.expand("$FOO-$BIZ", var_symbol_require_suffix=True) == "$FOO-$BIZ"
-    assert expandvars.expand("boo$BIZ", var_symbol_require_suffix=True) == "boo$BIZ"
-    assert expandvars.expand("boo${BIZ}", var_symbol_require_suffix=True) == "boobuz"
+    assert expandvars.expand("${FOO}:$BIZ", surrounded_vars_only=True) == "bar:$BIZ"
+    assert expandvars.expand("$FOO$BIZ", surrounded_vars_only=True) == "$FOO$BIZ"
+    assert expandvars.expand("${FOO}$BIZ", surrounded_vars_only=True) == "bar$BIZ"
+    assert expandvars.expand("$FOO${BIZ}", surrounded_vars_only=True) == "$FOObuz"
+    assert expandvars.expand("$FOO-$BIZ", surrounded_vars_only=True) == "$FOO-$BIZ"
+    assert expandvars.expand("boo$BIZ", surrounded_vars_only=True) == "boo$BIZ"
+    assert expandvars.expand("boo${BIZ}", surrounded_vars_only=True) == "boobuz"
 
 
 @patch.dict(env, {"FOO": "bar", "BIZ": "buz"}, clear=True)
@@ -416,8 +414,6 @@ def test_expandvars_disable_escape():
     importlib.reload(expandvars)
 
     assert (
-        expandvars.expand(
-            "\\foo\\", var_symbol_require_suffix=True, disable_escape=True
-        )
+        expandvars.expand("\\foo\\", surrounded_vars_only=True, escape_char=None)
         == "\\foo\\"
     )
