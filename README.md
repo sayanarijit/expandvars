@@ -81,13 +81,13 @@ EXPANDVARS_RECOVER_NULL=foo myapp --config production.ini && echo "All fine."
 
 ### Customization
 
-You can customize the variable symbol and data used for the expansion by using the more general `expand` function.
+You can customize the variable symbol, escape character, whether to expand non-surrounded variables and data used for the expansion by using the more general `expand` function.
 
 ```python
 from expandvars import expand
 
-print(expand("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-/default/path}", environ={"PATH": "/example"}, var_symbol="%"))
-# /example:$HOME/bin:/default/path
+print(expand("%PATH:$HOME/bin:%{SOME_UNDEFINED_PATH:-D:\\default\\path}", environ={"PATH": "/example"}, var_symbol="%", surrounded_vars_only=True, escape_char=""))
+# %PATH:$HOME/bin:D:\default\path
 ```
 
 ## Contributing

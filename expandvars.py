@@ -7,7 +7,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v1.1.0"
+__version__ = "v1.1.1"
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -24,6 +24,7 @@ __all__ = [
 
 
 ESCAPE_CHAR = "\\"
+VAR_SYMBOL = "$"
 
 
 class ExpandvarsException(Exception):
@@ -76,7 +77,7 @@ class InvalidIndirectExpansion(ExpandvarsException, KeyError):
         super().__init__("{0}: invalid indirect expansion".format(param))
 
 
-def getenv(var, indirect, environ, var_symbol="$"):
+def getenv(var, indirect, environ, var_symbol=VAR_SYMBOL):
     """Get value from environment variable.
 
     When indirect is True, it will use the value of the resolved variable as
@@ -106,7 +107,7 @@ def expand(
     vars_,
     nounset=False,
     environ=os.environ,
-    var_symbol="$",
+    var_symbol=VAR_SYMBOL,
     surrounded_vars_only=False,
     escape_char=ESCAPE_CHAR,
 ):
