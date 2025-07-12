@@ -7,7 +7,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v1.0.0"
+__version__ = "v1.1.0"
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -229,7 +229,6 @@ def _read_var(buff, var_symbol):
     indirect = False
 
     while state != State.FINISHED_READING:
-
         next_ = buff.peek()
 
         if next_ == _PeekableIterator.NOTHING:
