@@ -10,6 +10,14 @@ import pytest
 import expandvars
 
 
+def test_unset_var_substring():
+    assert expandvars.expandvars("${SOME_UNKNOWN_VAR:0:10}") == ""
+
+
+def test_unset_var_length():
+    assert expandvars.expandvars("${#SOME_UNKNOWN_VAR}") == "0"
+
+
 #
 @patch.dict(env, {}, clear=True)
 def test_expandvars_constant():
@@ -184,7 +192,7 @@ def test_escape():
     assert expandvars.expandvars("\\\\$FOO") == "\\foo"
     assert expandvars.expandvars("$FOO\\$BAR") == "foo$BAR"
     assert expandvars.expandvars("\\$FOO$BAR") == "$FOObar"
-    assert expandvars.expandvars("$FOO" "\\" "\\" "\\" "$BAR") == ("foo" "\\" "$BAR")
+    assert expandvars.expandvars("$FOO\\\\\\$BAR") == ("foo\\$BAR")
     assert expandvars.expandvars("$FOO\\$") == "foo$"
     assert expandvars.expandvars("$\\FOO") == "$\\FOO"
     assert expandvars.expandvars("$\\$FOO") == "$$FOO"
