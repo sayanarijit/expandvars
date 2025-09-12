@@ -7,7 +7,7 @@ __author__ = "Arijit Basu"
 __email__ = "sayanarijit@gmail.com"
 __homepage__ = "https://github.com/sayanarijit/expandvars"
 __description__ = "Expand system variables Unix style"
-__version__ = "v1.1.1"
+__version__ = "v1.1.2"
 __license__ = "MIT"
 __all__ = [
     "BadSubstitution",
@@ -318,7 +318,7 @@ def _expand_var(buff, nounset, environ, var_symbol):
     if modifier_type == ModifierType.LENGTH:
         if modifier:
             raise BadSubstitution(var)
-        modified = str(len(val))
+        modified = str(len(val or ""))
     elif modifier_type == ModifierType.GET_DEFAULT:
         modified = val if val else modifier
 
@@ -389,7 +389,7 @@ def _modify_offset(var, val, modifier):
             raise NegativeSubStringExpression(var, length_str)
 
     width = offset + length if length is not None else None
-    return val[offset:width]
+    return (val or "")[offset:width]
 
 
 def _modify_strict(var, val, modifier, environ):
