@@ -39,4 +39,4 @@ build-backend = "hatchling.build"
 path = "expandvars.py"
 
 [tool.pytest]
-addopts = '--cov --cov-report=html --cov-fail-under=100'
+addopts = ["--cov", "--cov-report=html", "--cov-fail-under=100"]
